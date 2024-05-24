@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type transaction struct {
+type Transaction struct {
 	TSC_ID             uuid.UUID `gorm:"type:char(36);primary_key" json:"tsc_id"`
 	TSC_PRICE          float64   `gorm:"not null" json:"tsc_price"`
 	TSC_VIRTUALACCOUNT string    `gorm:"not null" json:"tsc_virtualaccount"`
@@ -17,4 +17,6 @@ type transaction struct {
 	UpdatedAt          time.Time `gorm:"not null" json:"updatedAt"`
 	STORE_ID           uuid.UUID `json:"store_id"`
 	STORE              Store     `gorm:"foreignKey:STORE_ID;references:STORE_ID"`
+	PAYMENT_ID         uuid.UUID `json:"payment_id"`
+	PAYMENT            Payment   `gorm:"foreignKey:PAYMENT_ID;references:PAYMENT_ID"`
 }
