@@ -21,7 +21,7 @@ func GenerateTokenPair(user *models.User) (string, error) {
 
 	t, err := token.SignedString([]byte("secret"))
 	if err != nil {
-		return "", err
+		return "Error in jwt", err
 	}
 
 	return t, nil
@@ -31,7 +31,7 @@ func GetToken(c echo.Context) string {
 	auth, exists := c.Request().Header["Authorization"]
 	if !exists || len(auth) == 0 {
 		fmt.Println("Error: Authorization header is missing or empty")
-		return ""
+		return "Error in jwt"
 	}
 
 	Bearer := auth[0]
