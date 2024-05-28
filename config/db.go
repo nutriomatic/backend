@@ -4,12 +4,14 @@ import (
 	"fmt"
 	"golang-template/models"
 	"os"
+	"time"
 
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 	"github.com/sirupsen/logrus"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 func InitDB() *gorm.DB {
@@ -32,13 +34,26 @@ func InitDB() *gorm.DB {
 	// 	DSN:                  dbURI,
 	// 	PreferSimpleProtocol: true,
 	// }), &gorm.Config{})
-	db, err := gorm.Open(mysql.Open(dbURI), &gorm.Config{})
+
+	newLogger := logger.New(
+		logrus.New(), // Use logrus for logging
+		logger.Config{
+			SlowThreshold: time.Second, // Slow SQL threshold
+			LogLevel:      logger.Info, // Log level
+			Colorful:      true,        // Disable color
+		},
+	)
+
+	db, err := gorm.Open(mysql.Open(dbURI), &gorm.Config{
+		Logger:                                   newLogger,
+		DisableForeignKeyConstraintWhenMigrating: true,
+	})
 
 	if err != nil {
 		panic(err)
 	}
 
-	err = db.AutoMigrate(&models.User{}, &models.Token{}) // , &models.Theater{}, &models.Screening{}, , &models.Employee{}
+	err = db.AutoMigrate(&models.HealthGoal{}, &models.ActivityLevel{}, &models.User{}) // , &models.Theater{}, &models.Screening{}, , &models.Employee{}
 
 	if err != nil {
 		panic(err)

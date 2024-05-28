@@ -58,7 +58,30 @@ func GetTokenNext(next echo.HandlerFunc) echo.HandlerFunc {
 		}
 
 		token := parts[1]
-		c.Set("token", token) // Store token in the context for further use
+		// Verify the JWT token
+		claims := jwt.MapClaims{}
+		t, err := jwt.ParseWithClaims(token, claims, func(token *jwt.Token) (interface{}, error) {
+			// Check the signing method
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+			}
+			return []byte("secret"), nil // Specify your secret key here
+		})
+		if err != nil {
+			return c.String(http.StatusUnauthorized, "Invalid token")
+		}
+		if !t.Valid {
+			return c.String(http.StatusUnauthorized, "Invalid token")
+		}
+
+		// Check the audience claim (aud)
+		audience, ok := claims["aud"].([]string)
+		if !ok || len(audience) == 0 {
+			return c.String(http.StatusUnauthorized, "Invalid audience claim")
+		}
+
+		// Store token in the context for further use
+		c.Set("token", token)
 		return next(c)
 	}
 }

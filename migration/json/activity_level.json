@@ -1,0 +1,37 @@
+[
+    {
+        "al_type": 1,
+        "al_desc": "Sedentary",
+        "al_value": 1.2,
+        "createdAt": "2024-01-01T12:00:00Z",
+        "updatedAt": "2024-05-01T12:00:00Z"
+    },
+    {
+        "al_type": 2,
+        "al_desc": "Lightly active",
+        "al_value": 1.375,
+        "createdAt": "2024-01-02T12:00:00Z",
+        "updatedAt": "2024-05-02T12:00:00Z"
+    },
+    {
+        "al_type": 3,
+        "al_desc": "Moderately active",
+        "al_value": 1.55,
+        "createdAt": "2024-01-03T12:00:00Z",
+        "updatedAt": "2024-05-03T12:00:00Z"
+    },
+    {
+        "al_type": 4,
+        "al_desc": "Very active",
+        "al_value": 1.725,
+        "createdAt": "2024-01-04T12:00:00Z",
+        "updatedAt": "2024-05-04T12:00:00Z"
+    },
+    {
+        "al_type": 5,
+        "al_desc": "Super active",
+        "al_value": 1.9,
+        "createdAt": "2024-01-05T12:00:00Z",
+        "updatedAt": "2024-05-05T12:00:00Z"
+    }
+]

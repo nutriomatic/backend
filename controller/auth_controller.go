@@ -34,26 +34,41 @@ func (a *authController) Register(c echo.Context) error {
 	registerReq := &dto.RegisterForm{}
 	err := c.Bind(registerReq)
 	if err != nil {
-		return c.String(http.StatusBadRequest, "All user fields must be provided!")
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"status":  "failed",
+			"message": dto.FieldsRequired,
+		})
 	}
 
 	_, err = a.userService.GetUserByUsername(registerReq.Username)
 	if err == nil {
-		return c.String(http.StatusBadRequest, "Username "+registerReq.Username+" already exists.")
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"status":  "failed",
+			"message": dto.UsernameExists,
+		})
 	}
 
 	_, err = a.userService.GetUserByEmail(registerReq.Email)
 	if err == nil {
-		return c.String(http.StatusBadRequest, "Email "+registerReq.Email+" already exists")
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"status":  "failed",
+			"message": dto.EmailExists,
+		})
 	}
 
 	if !utils.ValidateLengthPassword(registerReq.Password) {
-		return c.String(http.StatusBadRequest, "Password is too short")
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"status":  "failed",
+			"message": dto.PasswordShort,
+		})
 	}
 
 	err = a.userService.CreateUser(registerReq)
 	if err != nil {
-		return echo.ErrInternalServerError
+		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"status":  "failed",
+			"message": "Error creating user.",
+		})
 	}
 
 	return c.JSON(http.StatusCreated, map[string]string{

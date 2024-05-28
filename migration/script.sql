@@ -1,13 +1,50 @@
--- Enable uuid-ossp extension for UUID generation
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+SET FOREIGN_KEY_CHECKS = 0;
 
--- Create User table
+DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS activity_levels;
+DROP TABLE IF EXISTS health_goals;
+
+SET FOREIGN_KEY_CHECKS = 1;
+
+-- Create the activity_levels table
+CREATE TABLE IF NOT EXISTS activity_levels (
+    al_id VARCHAR(36) PRIMARY KEY,
+    al_type BIGINT NOT NULL,
+    al_desc VARCHAR(255) NOT NULL,
+    al_value FLOAT NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Create the health_goals table
+CREATE TABLE IF NOT EXISTS health_goals (
+    hg_id VARCHAR(36) PRIMARY KEY,
+    hg_type BIGINT NOT NULL,
+    hg_desc VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Create the users table
 CREATE TABLE IF NOT EXISTS users (
-    id CHAR(36) PRIMARY KEY,
+    id VARCHAR(36) PRIMARY KEY,
     username VARCHAR(255) UNIQUE NOT NULL,
     name VARCHAR(255) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP,
-    updated_at TIMESTAMP
+    role VARCHAR(255) NOT NULL,
+    gender BIGINT NOT NULL,
+    telp VARCHAR(255) NOT NULL,
+    profpic VARCHAR(255) NOT NULL,
+    birthdate DATE NOT NULL,
+    place VARCHAR(255) NOT NULL,
+    height FLOAT NOT NULL,
+    weight FLOAT NOT NULL,
+    weight_goal FLOAT NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    hg_id VARCHAR(36),
+    al_id VARCHAR(36),
+    FOREIGN KEY (hg_id) REFERENCES health_goals(hg_id),
+    FOREIGN KEY (al_id) REFERENCES activity_levels(al_id)
 );

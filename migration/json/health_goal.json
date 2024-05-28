@@ -1,0 +1,14 @@
+[
+    {
+        "hg_type": 1,
+        "hg_desc": "Lose Weight"
+    },
+    {
+        "hg_type": 2,
+        "hg_desc": "Maintain Weight"
+    },
+    {
+        "hg_type": 3,
+        "hg_desc": "Gain Weight"
+    }
+]

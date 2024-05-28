@@ -3,7 +3,6 @@ package repository
 import (
 	"time"
 
-	"github.com/google/uuid"
 	"gorm.io/gorm"
 
 	"golang-template/config"
@@ -13,11 +12,11 @@ import (
 
 type UserRepository interface {
 	CreateUser(user *models.User) error
-	GetUserById(id uuid.UUID) (*models.User, error)
+	GetUserById(id string) (*models.User, error)
 	GetUserByUsername(username string) (*models.User, error)
 	GetUserByEmail(email string) (*models.User, error)
 	UpdateUser(user *models.User) (*models.User, error)
-	DeleteUser(id uuid.UUID) error
+	DeleteUser(id string) error
 	FindAll(page, pageSize int, search, sort string) ([]models.User, *dto.Pagination, error)
 	Logout(token string) error
 }
@@ -36,7 +35,7 @@ func (repo *UserRepositoryGORM) CreateUser(user *models.User) error {
 	return repo.db.Create(user).Error
 }
 
-func (repo *UserRepositoryGORM) GetUserById(id uuid.UUID) (*models.User, error) {
+func (repo *UserRepositoryGORM) GetUserById(id string) (*models.User, error) {
 	user := &models.User{}
 	err := repo.db.Where("id = ?", id).First(user).Error
 	if err != nil {
@@ -76,7 +75,7 @@ func (repo *UserRepositoryGORM) UpdateUser(user *models.User) (*models.User, err
 	return user, repo.db.Save(user).Error
 }
 
-func (repo *UserRepositoryGORM) DeleteUser(id uuid.UUID) error {
+func (repo *UserRepositoryGORM) DeleteUser(id string) error {
 	return repo.db.Where("id = ?", id).Delete(models.User{}).Error
 }
 

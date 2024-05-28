@@ -15,7 +15,7 @@ import (
 
 type UserService interface {
 	CreateUser(registerReq *dto.RegisterForm) error
-	GetUserById(id uuid.UUID) (*models.User, error)
+	GetUserById(id string) (*models.User, error)
 	GetUserByUsername(username string) (*models.User, error)
 	GetUserByEmail(email string) (*models.User, error)
 	UpdateUser(updateForm *dto.RegisterForm, c echo.Context) (*models.User, error)
@@ -36,14 +36,21 @@ func NewUserService() UserService {
 
 func (s *userService) CreateUser(registerReq *dto.RegisterForm) error {
 	newUser := models.User{
-		ID:        uuid.New(),
-		Name:      registerReq.Name,
-		Username:  registerReq.Username,
-		Email:     registerReq.Email,
-		Password:  registerReq.Password,
-		Role:      "customer",
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		ID:         uuid.New().String(),
+		Name:       registerReq.Name,
+		Username:   registerReq.Username,
+		Email:      registerReq.Email,
+		Password:   registerReq.Password,
+		Gender:     registerReq.Gender,
+		Telp:       registerReq.Telp,
+		Profpic:    registerReq.Profpic,
+		Birthdate:  registerReq.Birthdate,
+		Place:      registerReq.Place,
+		Height:     registerReq.Height,
+		Weight:     registerReq.Weight,
+		WeightGoal: registerReq.WeightGoal,
+		CreatedAt:  time.Now(),
+		UpdatedAt:  time.Now(),
 	}
 
 	hashed, err := utils.HashPassword(newUser.Password)
@@ -62,7 +69,7 @@ func (s *userService) GetUserByEmail(email string) (*models.User, error) {
 	return s.userRepo.GetUserByEmail(email)
 }
 
-func (s *userService) GetUserById(id uuid.UUID) (*models.User, error) {
+func (s *userService) GetUserById(id string) (*models.User, error) {
 	return s.userRepo.GetUserById(id)
 }
 

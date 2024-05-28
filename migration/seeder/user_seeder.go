@@ -28,7 +28,7 @@ func SeederUser(db *gorm.DB) {
 	json.Unmarshal(byteValue, &users)
 
 	for _, user := range users {
-		user.ID = uuid.New() // Generate new UUID
+		user.ID = uuid.New().String() // Generate new UUID
 		user.Password, err = utils.HashPassword(user.Password)
 		if err != nil {
 			log.Printf("Could not hash password for user %s: %v", user.Username, err)
