@@ -91,21 +91,33 @@ func (a *authController) Login(c echo.Context) error {
 		user, err = a.userService.GetUserByUsername(loginReq.Username)
 	}
 	if err != nil {
-		return c.String(http.StatusInternalServerError, "Error retrieving user.")
+		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"status":  "failed",
+			"message": dto.ErrorRetrievingUser,
+		})
 	}
 
 	if user == nil {
-		return c.String(http.StatusUnauthorized, "User not found.")
+		return c.JSON(http.StatusUnauthorized, map[string]string{
+			"status":  "failed",
+			"message": dto.UserNotFound,
+		})
 	}
 
 	if utils.ValidatePassword(user.Password, loginReq.Password) {
 		token, err := middleware.GenerateTokenPair(user)
 		if err != nil {
-			return c.String(http.StatusInternalServerError, "Error generating token.")
+			return c.JSON(http.StatusInternalServerError, map[string]string{
+				"status":  "failed",
+				"message": dto.ErrorGeneratingToken,
+			})
 		}
 		err = a.tokenService.SaveToken(user, token)
 		if err != nil {
-			return c.String(http.StatusInternalServerError, "Error saving token.")
+			return c.JSON(http.StatusInternalServerError, map[string]string{
+				"status":  "failed",
+				"message": dto.ErrorSavingToken,
+			})
 		}
 		var loginmessage string
 

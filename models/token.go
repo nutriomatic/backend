@@ -7,8 +7,8 @@ import (
 )
 
 type Token struct {
-	ID        string         `gorm:"primaryKey;type:varchar(36);not null" json:"id"`
-	UserId    string         `gorm:"type:varchar(36);not null" json:"userId"`
+	// ID        string         `gorm:"primaryKey;type:varchar(36);not null" json:"id"`
+	UserId    string         `gorm:"type:varchar(36);not null" json:"user_id"`
 	User      User           `gorm:"foreignKey:UserId;references:ID;constraint:OnDelete:CASCADE;" json:"-"`
 	Token     string         `gorm:"unique;size:255;not null" json:"token"`
 	ExpiresAt time.Time      `gorm:"not null" json:"expiresAt"`

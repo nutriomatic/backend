@@ -15,6 +15,7 @@ type UserRepository interface {
 	GetUserById(id string) (*models.User, error)
 	GetUserByUsername(username string) (*models.User, error)
 	GetUserByEmail(email string) (*models.User, error)
+	GetUserWithoutPassword(id string) (*models.User, error)
 	UpdateUser(user *models.User) (*models.User, error)
 	DeleteUser(id string) error
 	FindAll(page, pageSize int, search, sort string) ([]models.User, *dto.Pagination, error)
@@ -65,6 +66,17 @@ func (repo *UserRepositoryGORM) GetUserByEmail(email string) (*models.User, erro
 func (repo *UserRepositoryGORM) GetUserByRole(role string) (*models.User, error) {
 	var user models.User
 	err := repo.db.Where("role = ?", role).First(&user).Error
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
+func (repo *UserRepositoryGORM) GetUserWithoutPassword(id string) (*models.User, error) {
+	var user models.User
+	err := repo.db.Preload("HealthGoal").Preload("ActivityLevel").
+		Select("id", "username", "name", "email", "role", "gender", "telp", "profpic", "birthdate", "place", "height", "weight", "weight_goal", "created_at", "updated_at", "hg_id", "al_id").
+		Where("id = ?", id).First(&user).Error
 	if err != nil {
 		return nil, err
 	}

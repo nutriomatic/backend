@@ -35,12 +35,23 @@ func NewUserService() UserService {
 }
 
 func (s *userService) CreateUser(registerReq *dto.RegisterForm) error {
+
+	al_id, err := NewActivityLevelService().GetIdByType(registerReq.AL_TYPE)
+	if err != nil {
+		return err
+	}
+	hg_id, err := NewHealthGoalService().GetIdByType(registerReq.HG_TYPE)
+	if err != nil {
+		return err
+	}
+
 	newUser := models.User{
 		ID:         uuid.New().String(),
 		Name:       registerReq.Name,
 		Username:   registerReq.Username,
 		Email:      registerReq.Email,
 		Password:   registerReq.Password,
+		Role:       registerReq.Role,
 		Gender:     registerReq.Gender,
 		Telp:       registerReq.Telp,
 		Profpic:    registerReq.Profpic,
@@ -49,6 +60,8 @@ func (s *userService) CreateUser(registerReq *dto.RegisterForm) error {
 		Height:     registerReq.Height,
 		Weight:     registerReq.Weight,
 		WeightGoal: registerReq.WeightGoal,
+		AL_ID:      al_id,
+		HG_ID:      hg_id,
 		CreatedAt:  time.Now(),
 		UpdatedAt:  time.Now(),
 	}
@@ -79,7 +92,7 @@ func (s *userService) UpdateUser(updateForm *dto.RegisterForm, c echo.Context) (
 		return nil, c.String(http.StatusUnauthorized, "Unauthorized")
 	}
 
-	existingUser, err := s.userRepo.GetUserById(tokenUser.ID)
+	existingUser, err := s.userRepo.GetUserById(tokenUser.Id)
 	if err != nil {
 		return nil, c.String(http.StatusInternalServerError, "error retrieving user")
 	}
@@ -121,7 +134,7 @@ func (s *userService) DeleteUser(c echo.Context) error {
 		return c.String(http.StatusUnauthorized, "Unauthorized")
 	}
 
-	existingUser, err := s.userRepo.GetUserById(tokenUser.ID)
+	existingUser, err := s.userRepo.GetUserById(tokenUser.Id)
 	if err != nil {
 		return c.String(http.StatusInternalServerError, "error retrieving user")
 	}

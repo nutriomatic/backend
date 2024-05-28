@@ -1,6 +1,7 @@
 package services
 
 import (
+	"golang-template/dto"
 	"golang-template/middleware"
 	"golang-template/models"
 	"golang-template/repository"
@@ -10,7 +11,7 @@ import (
 
 type TokenService interface {
 	SaveToken(user *models.User, token string) error
-	UserByToken(c echo.Context) (*models.User, error)
+	UserByToken(c echo.Context) (*dto.UserResponseToken, error)
 }
 
 type tokenService struct {
@@ -27,7 +28,7 @@ func (s *tokenService) SaveToken(user *models.User, token string) error {
 	return s.tokenRepo.SaveToken(user, token)
 }
 
-func (s *tokenService) UserByToken(c echo.Context) (*models.User, error) {
+func (s *tokenService) UserByToken(c echo.Context) (*dto.UserResponseToken, error) {
 	token := middleware.GetToken(c)
 	return s.tokenRepo.UserByToken(token)
 }
