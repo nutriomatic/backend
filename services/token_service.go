@@ -12,6 +12,7 @@ import (
 type TokenService interface {
 	SaveToken(user *models.User, token string) error
 	UserByToken(c echo.Context) (*dto.UserResponseToken, error)
+	UserToken(c echo.Context) (*models.User, error)
 }
 
 type tokenService struct {
@@ -31,4 +32,9 @@ func (s *tokenService) SaveToken(user *models.User, token string) error {
 func (s *tokenService) UserByToken(c echo.Context) (*dto.UserResponseToken, error) {
 	token := middleware.GetToken(c)
 	return s.tokenRepo.UserByToken(token)
+}
+
+func (s *tokenService) UserToken(c echo.Context) (*models.User, error) {
+	token := middleware.GetToken(c)
+	return s.tokenRepo.UserToken(token)
 }

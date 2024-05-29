@@ -26,6 +26,7 @@ func (r *Router) Start(addr string) error {
 func InitRouter(e *echo.Echo) {
 	authController := controllers.NewAuthController()
 	userController := controllers.NewUserController()
+	storeController := controllers.NewStoreController()
 
 	authGroup := e.Group("/api/auth")
 	authGroup.POST("/register", authController.Register)
@@ -38,4 +39,6 @@ func InitRouter(e *echo.Echo) {
 	userGroup.PATCH("/", userController.UpdateUser)
 	userGroup.DELETE("/", userController.DeleteUser)
 
+	storeGroup := e.Group("/api/store")
+	storeGroup.POST("/", storeController.CreateStore)
 }
