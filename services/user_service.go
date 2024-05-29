@@ -18,7 +18,7 @@ type UserService interface {
 	GetUserById(id string) (*models.User, error)
 	GetUserByUsername(username string) (*models.User, error)
 	GetUserByEmail(email string) (*models.User, error)
-	UpdateUser(updateForm *dto.RegisterForm, c echo.Context) (*models.User, error)
+	UpdateUser(updateForm *dto.RegisterForm, c echo.Context) (*dto.UserResponseToken, error)
 	DeleteUser(c echo.Context) error
 	Logout(c echo.Context) error
 }
@@ -30,7 +30,8 @@ type userService struct {
 
 func NewUserService() UserService {
 	return &userService{
-		userRepo: repository.NewUserRepositoryGORM(),
+		userRepo:  repository.NewUserRepositoryGORM(),
+		tokenRepo: repository.NewTokenRepositoryGORM(),
 	}
 }
 
@@ -86,15 +87,15 @@ func (s *userService) GetUserById(id string) (*models.User, error) {
 	return s.userRepo.GetUserById(id)
 }
 
-func (s *userService) UpdateUser(updateForm *dto.RegisterForm, c echo.Context) (*models.User, error) {
-	tokenUser, err := s.tokenRepo.UserByToken(middleware.GetToken(c))
+func (s *userService) UpdateUser(updateForm *dto.RegisterForm, c echo.Context) (*dto.UserResponseToken, error) {
+	tokenUser, err := s.tokenRepo.UserToken(middleware.GetToken(c))
 	if err != nil {
-		return nil, c.String(http.StatusUnauthorized, "Unauthorized")
+		return nil, echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized")
 	}
 
-	existingUser, err := s.userRepo.GetUserById(tokenUser.Id)
+	existingUser, err := s.userRepo.GetUserById(tokenUser.ID)
 	if err != nil {
-		return nil, c.String(http.StatusInternalServerError, "error retrieving user")
+		return nil, echo.NewHTTPError(http.StatusInternalServerError, "error retrieving user")
 	}
 
 	if updateForm.Name != "" {
@@ -103,29 +104,85 @@ func (s *userService) UpdateUser(updateForm *dto.RegisterForm, c echo.Context) (
 
 	if updateForm.Username != "" {
 		if _, err := s.userRepo.GetUserByUsername(updateForm.Username); err == nil {
-			return nil, c.String(http.StatusBadRequest, "username already exists")
+			return nil, echo.NewHTTPError(http.StatusBadRequest, "username already exists")
 		}
 		existingUser.Username = updateForm.Username
 	}
 
 	if updateForm.Email != "" {
 		if _, err := s.userRepo.GetUserByEmail(updateForm.Email); err == nil {
-			return nil, c.String(http.StatusBadRequest, "email already exists")
+			return nil, echo.NewHTTPError(http.StatusBadRequest, "email already exists")
 		}
 		existingUser.Email = updateForm.Email
 	}
 
 	if updateForm.Password != "" {
 		if !utils.ValidateLengthPassword(updateForm.Password) {
-			return nil, c.String(http.StatusBadRequest, "invalid password format")
+			return nil, echo.NewHTTPError(http.StatusBadRequest, "invalid password format")
 		}
 		hashedPassword, err := utils.HashPassword(updateForm.Password)
 		if err != nil {
-			return nil, c.String(http.StatusInternalServerError, "error hashing password")
+			return nil, echo.NewHTTPError(http.StatusInternalServerError, "error hashing password")
 		}
 		existingUser.Password = hashedPassword
 	}
-	return s.userRepo.UpdateUser(existingUser)
+
+	if updateForm.Gender != 0 {
+		existingUser.Gender = updateForm.Gender
+	}
+
+	if updateForm.Telp != "" {
+		existingUser.Telp = updateForm.Telp
+	}
+
+	if updateForm.Profpic != "" {
+		existingUser.Profpic = updateForm.Profpic
+	}
+
+	if updateForm.Birthdate != "" {
+		existingUser.Birthdate = updateForm.Birthdate
+	}
+
+	if updateForm.Place != "" {
+		existingUser.Place = updateForm.Place
+	}
+
+	if updateForm.Height != 0 {
+		existingUser.Height = updateForm.Height
+	}
+
+	if updateForm.Weight != 0 {
+		existingUser.Weight = updateForm.Weight
+	}
+
+	if updateForm.WeightGoal != 0 {
+		existingUser.WeightGoal = updateForm.WeightGoal
+	}
+
+	if updateForm.AL_TYPE != 0 {
+		al_id, err := NewActivityLevelService().GetIdByType(updateForm.AL_TYPE)
+		if err != nil {
+			return nil, echo.NewHTTPError(http.StatusInternalServerError, "error retrieving activity level")
+		}
+		existingUser.AL_ID = al_id
+	}
+
+	if updateForm.HG_TYPE != 0 {
+		hg_id, err := NewHealthGoalService().GetIdByType(updateForm.HG_TYPE)
+		if err != nil {
+			return nil, echo.NewHTTPError(http.StatusInternalServerError, "error retrieving health goal")
+		}
+		existingUser.HG_ID = hg_id
+	}
+
+	existingUser.UpdatedAt = time.Now()
+
+	updatedUser, err := s.userRepo.UpdateUser(existingUser)
+	if err != nil {
+		return nil, echo.NewHTTPError(http.StatusInternalServerError, "error updating user")
+	}
+
+	return updatedUser, nil
 }
 
 func (s *userService) DeleteUser(c echo.Context) error {

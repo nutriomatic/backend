@@ -2,7 +2,6 @@ package router
 
 import (
 	controllers "golang-template/controller"
-	"golang-template/middleware"
 
 	"github.com/labstack/echo/v4"
 )
@@ -35,7 +34,7 @@ func InitRouter(e *echo.Echo) {
 	authGroup.POST("/logout", userController.Logout)
 
 	userGroup := e.Group("/api/user")
-	userGroup.Use(middleware.GetTokenNext)
+	// userGroup.Use(middleware.GetTokenNext)
 	userGroup.PATCH("/", userController.UpdateUser)
 	userGroup.DELETE("/", userController.DeleteUser)
 

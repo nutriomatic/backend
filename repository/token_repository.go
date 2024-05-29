@@ -12,6 +12,8 @@ import (
 type TokenRepository interface {
 	SaveToken(user *models.User, token string) error
 	UserByToken(token string) (*dto.UserResponseToken, error)
+	FindUserId(token string) string
+	UserToken(token string) (*models.User, error)
 }
 
 type TokenRepositoryGORM struct {
@@ -27,10 +29,43 @@ func NewTokenRepositoryGORM() *TokenRepositoryGORM {
 }
 
 func (repo *TokenRepositoryGORM) SaveToken(user *models.User, token string) error {
+	id := repo.FindUserId(token)
+
+	if id != "" {
+		repo.db.Where("user_id = ?", id).Delete(&models.Token{})
+	}
+
 	AccessToken := models.Token{UserId: user.ID, Token: token, ExpiresAt: time.Now().Add(time.Hour * 24)}
 	result := repo.db.Create(&AccessToken)
 
 	return result.Error
+}
+
+func (repo *TokenRepositoryGORM) FindUserId(token string) string {
+	var AccessToken models.Token
+
+	err := repo.db.Select("user_id").Where("token = ?", token).Where("expires_at > ?", time.Now()).First(&AccessToken).Error
+	if err != nil {
+		return ""
+	}
+
+	return AccessToken.UserId
+}
+
+func (repo *TokenRepositoryGORM) UserToken(token string) (*models.User, error) {
+	var AccessToken models.Token
+	var User models.User
+
+	err := repo.db.Where("token = ?", token).Where("expires_at > ?", time.Now()).First(&AccessToken).Error
+	if err != nil {
+		return nil, err
+	}
+	err = repo.db.Where("id = ?", AccessToken.UserId).First(&User).Error
+	if err != nil {
+		return nil, err
+	}
+	return &User, nil
+
 }
 
 func (repo *TokenRepositoryGORM) UserByToken(token string) (*dto.UserResponseToken, error) {

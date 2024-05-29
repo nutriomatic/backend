@@ -37,12 +37,28 @@ func (u *userController) UpdateUser(c echo.Context) error {
 	updateForm := &dto.RegisterForm{}
 	err := c.Bind(updateForm)
 	if err != nil {
-		return c.String(http.StatusBadRequest, "All user fields must be provided!")
+		response := map[string]interface{}{
+			"status":  "error",
+			"message": "All user fields must be provided!",
+		}
+		return c.JSON(http.StatusBadRequest, response)
 	}
 
 	updatedUser, err := u.UserService.UpdateUser(updateForm, c)
 	if err != nil {
-		return err
+		httpError, ok := err.(*echo.HTTPError)
+		if ok {
+			response := map[string]interface{}{
+				"status":  "error",
+				"message": httpError.Message,
+			}
+			return c.JSON(httpError.Code, response)
+		}
+		response := map[string]interface{}{
+			"status":  "error",
+			"message": "internal server error",
+		}
+		return c.JSON(http.StatusInternalServerError, response)
 	}
 
 	response := map[string]interface{}{

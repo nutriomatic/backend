@@ -1,16 +1,37 @@
 [
     {
-        "username": "admin",
-        "name": "admin",
-        "email": "admine@example.com",
-        "password": "password123", 
-        "role": "admin"
+        "name": "John Doe",
+        "username": "john_doe",
+        "email": "john.doe@example.com",
+        "password": "password123",
+        "role": "user",
+        "gender": 1,
+        "telp": "+1234567890",
+        "profpic": "http://example.com/images/john_doe.jpg",
+        "birthdate": "1990-01-01",
+        "place": "New York",
+        "height": 175.5,
+        "weight": 70.2,
+        "weight_goal": 65.0,
+        "al_type": 2,
+        "hg_type": 1
     },
     {
-        "username": "johndoe",
-        "name": "John Doe",
-        "email": "john.doe@example.com",
-        "password": "password123", 
-        "role": "user"
+        "name": "Jane Smith",
+        "username": "jane_smith",
+        "email": "jane.smith@example.com",
+        "password": "securePass!2024",
+        "role": "admin",
+        "gender": 2,
+        "telp": "+0987654321",
+        "profpic": "http://example.com/images/jane_smith.jpg",
+        "birthdate": "1985-05-15",
+        "place": "Los Angeles",
+        "height": 165.0,
+        "weight": 60.0,
+        "weight_goal": 55.0,
+        "al_type": 3,
+        "hg_type": 2
     }
+    
 ]
