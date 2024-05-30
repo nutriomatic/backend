@@ -43,4 +43,5 @@ func InitRouter(e *echo.Echo) {
 	storeGroup.POST("/", storeController.CreateStore)
 	storeGroup.GET("/", storeController.GetStoreByUserId)
 	storeGroup.PATCH("/", storeController.UpdateStore)
+	storeGroup.DELETE("/", storeController.DeleteStore)
 }

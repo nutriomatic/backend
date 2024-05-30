@@ -119,3 +119,16 @@ func (s *storeController) UpdateStore(c echo.Context) error {
 	}
 	return c.JSON(http.StatusOK, response)
 }
+
+func (s *storeController) DeleteStore(c echo.Context) error {
+	err := s.StoreService.DeleteStore(c)
+	if err != nil {
+		return c.String(http.StatusInternalServerError, "error in removing store")
+	}
+
+	response := map[string]interface{}{
+		"status":  "success",
+		"message": "store removed successfully",
+	}
+	return c.JSON(http.StatusOK, response)
+}

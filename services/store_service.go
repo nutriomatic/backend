@@ -17,6 +17,7 @@ type StoreService interface {
 	GetStoreByUserId(id string) (*models.Store, error)
 	GetStoreByUsername(username string) (*models.Store, error)
 	UpdateStore(updateForm *dto.StoreRegisterForm, c echo.Context) error
+	DeleteStore(c echo.Context) error
 }
 
 type storeService struct {
@@ -86,4 +87,18 @@ func (s *storeService) UpdateStore(updateForm *dto.StoreRegisterForm, c echo.Con
 
 	existingUser.UpdatedAt = time.Now()
 	return s.storeRepo.UpdateStore(existingUser)
+}
+
+func (s *storeService) DeleteStore(c echo.Context) error {
+	tokenUser, err := s.tokenRepo.UserToken(middleware.GetToken(c))
+	if err != nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized")
+	}
+
+	store, err := s.storeRepo.GetStoreByUserId(tokenUser.ID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusNotFound, "Store not found")
+	}
+
+	return s.storeRepo.DeleteStore(store.STORE_ID)
 }
