@@ -41,4 +41,6 @@ func InitRouter(e *echo.Echo) {
 
 	storeGroup := e.Group("/api/store")
 	storeGroup.POST("/", storeController.CreateStore)
+	storeGroup.GET("/", storeController.GetStoreByUserId)
+	storeGroup.PATCH("/", storeController.UpdateStore)
 }

@@ -10,7 +10,7 @@ import (
 
 type StoreRepository interface {
 	CreateStore(store *models.Store) error
-	GetStoreById(id string) (*models.Store, error)
+	GetStoreByUserId(id string) (*models.Store, error)
 	GetStoreByUsername(username string) (*models.Store, error)
 	UpdateStore(store *models.Store) error
 	DeleteStore(id string) error
@@ -30,9 +30,9 @@ func (repo *StoreRepositoryGORM) CreateStore(store *models.Store) error {
 	return repo.db.Create(store).Error
 }
 
-func (repo *StoreRepositoryGORM) GetStoreById(id string) (*models.Store, error) {
+func (repo *StoreRepositoryGORM) GetStoreByUserId(id string) (*models.Store, error) {
 	store := &models.Store{}
-	err := repo.db.Where("store_id = ?", id).First(store).Error
+	err := repo.db.Where("user_id = ?", id).First(store).Error
 	if err != nil {
 		return nil, err
 	}

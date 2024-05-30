@@ -13,5 +13,5 @@ type Store struct {
 	CreatedAt      time.Time `gorm:"not null" json:"createdAt"`
 	UpdatedAt      time.Time `gorm:"not null" json:"updatedAt"`
 	USER_ID        string    `gorm:"type:varchar(36)" json:"user_id"`
-	USER           User      `gorm:"foreignKey:USER_ID;references:ID"`
+	USER           User      `gorm:"foreignKey:USER_ID;references:ID" json:"-"`
 }
