@@ -4,6 +4,7 @@ import (
 	"golang-template/dto"
 	"golang-template/services"
 	"net/http"
+	"strconv"
 
 	"github.com/labstack/echo/v4"
 )
@@ -129,6 +130,53 @@ func (s *storeController) DeleteStore(c echo.Context) error {
 	response := map[string]interface{}{
 		"status":  "success",
 		"message": "store removed successfully",
+	}
+	return c.JSON(http.StatusOK, response)
+}
+
+func (s *storeController) GetAllStores(c echo.Context) error {
+	page := 1
+	pageSize := 10
+
+	if qp := c.QueryParam("page"); qp != "" {
+		if p, err := strconv.Atoi(qp); err == nil {
+			page = p
+		}
+	}
+
+	if qp := c.QueryParam("pageSize"); qp != "" {
+		if ps, err := strconv.Atoi(qp); err == nil {
+			pageSize = ps
+		}
+	}
+
+	sort := c.QueryParam("sort")
+	if sort != "" && !dto.IsValidSortField(sort) {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid sort fields"})
+	}
+
+	var desc int
+	if qp := c.QueryParam("desc"); qp != "" {
+		if ds, err := strconv.Atoi(qp); err == nil {
+			desc = ds
+		}
+	}
+
+	var search string
+	if sp := c.QueryParam("search"); sp != "" {
+		search = sp
+	}
+
+	stores, pagination, err := s.StoreService.GetAll(desc, page, pageSize, search, sort)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+
+	response := map[string]interface{}{
+		"status":     "success",
+		"message":    "stores fetched successfully",
+		"stores":     stores,
+		"pagination": pagination,
 	}
 	return c.JSON(http.StatusOK, response)
 }

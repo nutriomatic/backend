@@ -2,6 +2,7 @@ package repository
 
 import (
 	"golang-template/config"
+	"golang-template/dto"
 
 	"golang-template/models"
 
@@ -14,6 +15,7 @@ type StoreRepository interface {
 	GetStoreByUsername(username string) (*models.Store, error)
 	UpdateStore(store *models.Store) error
 	DeleteStore(id string) error
+	GetAll(desc, page, pageSize int, search, sort string) (*[]models.Store, *dto.Pagination, error)
 }
 
 type StoreRepositoryGORM struct {
@@ -54,4 +56,28 @@ func (repo *StoreRepositoryGORM) UpdateStore(store *models.Store) error {
 
 func (repo *StoreRepositoryGORM) DeleteStore(id string) error {
 	return repo.db.Where("store_id = ?", id).Delete(&models.Store{}).Error
+}
+
+func (repo *StoreRepositoryGORM) GetAll(desc, page, pageSize int, search, sort string) (*[]models.Store, *dto.Pagination, error) {
+	var store []models.Store
+	query := repo.db.Model(&store)
+
+	if search != "" {
+		query = repo.db.Where("store_name ILIKE ? OR store_username ILIKE ?", "%"+search+"%", "%"+search+"%")
+	}
+
+	if sort != "" {
+		order := "ASC"
+		if desc == 1 {
+			order = "DESC"
+		}
+		query = query.Order(sort + " " + order)
+	}
+
+	pagination, err := dto.GetPaginated(query, page, pageSize, &store)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return &store, pagination, nil
 }

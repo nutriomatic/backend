@@ -18,6 +18,7 @@ type StoreService interface {
 	GetStoreByUsername(username string) (*models.Store, error)
 	UpdateStore(updateForm *dto.StoreRegisterForm, c echo.Context) error
 	DeleteStore(c echo.Context) error
+	GetAll(desc, page, pageSize int, search, sort string) (*[]models.Store, *dto.Pagination, error)
 }
 
 type storeService struct {
@@ -101,4 +102,8 @@ func (s *storeService) DeleteStore(c echo.Context) error {
 	}
 
 	return s.storeRepo.DeleteStore(store.STORE_ID)
+}
+
+func (s *storeService) GetAll(desc, page, pageSize int, search, sort string) (*[]models.Store, *dto.Pagination, error) {
+	return s.storeRepo.GetAll(desc, page, pageSize, search, sort)
 }
