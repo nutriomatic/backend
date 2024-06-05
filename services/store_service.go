@@ -34,6 +34,12 @@ func NewStoreService() StoreService {
 }
 
 func (s *storeService) CreateStore(registerReq *dto.StoreRegisterForm, user *models.User) error {
+	if registerReq.StoreUsername != "" {
+		if _, err := s.storeRepo.GetStoreByUsername(registerReq.StoreUsername); err == nil {
+			return echo.NewHTTPError(http.StatusConflict, "Username already exists")
+		}
+	}
+
 	newStore := models.Store{
 		STORE_ID:       uuid.New().String(),
 		STORE_NAME:     registerReq.StoreName,

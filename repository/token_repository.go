@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"errors"
 	"golang-template/config"
 	"golang-template/dto"
 	"golang-template/models"
@@ -29,14 +30,27 @@ func NewTokenRepositoryGORM() *TokenRepositoryGORM {
 }
 
 func (repo *TokenRepositoryGORM) SaveToken(user *models.User, token string) error {
-	id := repo.FindUserId(token)
+	userId := user.ID
 
-	if id != "" {
-		repo.db.Where("user_id = ?", id).Delete(&models.Token{})
+	var existingToken models.Token
+	err := repo.db.Where("user_id = ?", userId).First(&existingToken).Error
+	if err == nil {
+		// Token found, delete it
+		if deleteErr := repo.db.Where("user_id = ?", userId).Delete(&models.Token{}).Error; deleteErr != nil {
+			return deleteErr
+		}
+	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
+		// An error other than record not found occurred
+		return err
 	}
 
-	AccessToken := models.Token{UserId: user.ID, Token: token, ExpiresAt: time.Now().Add(time.Hour * 24)}
-	result := repo.db.Create(&AccessToken)
+	// Create new token
+	newToken := models.Token{
+		UserId:    user.ID,
+		Token:     token,
+		ExpiresAt: time.Now().Add(time.Hour * 24),
+	}
+	result := repo.db.Create(&newToken)
 
 	return result.Error
 }
@@ -94,9 +108,9 @@ func (repo *TokenRepositoryGORM) UserByToken(token string) (*dto.UserResponseTok
 	}
 
 	response := &dto.UserResponseToken{
-		Id:         User.ID,
-		Name:       User.Name,
-		Username:   User.Username,
+		Id:   User.ID,
+		Name: User.Name,
+		// Username:   User.Username,
 		Email:      User.Email,
 		Role:       User.Role,
 		Gender:     User.Gender,
@@ -117,4 +131,12 @@ func (repo *TokenRepositoryGORM) UserByToken(token string) (*dto.UserResponseTok
 	}
 
 	return response, nil
+}
+
+func (repo *TokenRepositoryGORM) DeleteToken(token string) error {
+	err := repo.db.Where("token = ?", token).Delete(&models.Token{}).Error
+	if err != nil {
+		return err
+	}
+	return nil
 }

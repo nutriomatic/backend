@@ -13,6 +13,7 @@ type TokenService interface {
 	SaveToken(user *models.User, token string) error
 	UserByToken(c echo.Context) (*dto.UserResponseToken, error)
 	UserToken(c echo.Context) (*models.User, error)
+	IsAdmin(c echo.Context) bool
 }
 
 type tokenService struct {
@@ -37,4 +38,17 @@ func (s *tokenService) UserByToken(c echo.Context) (*dto.UserResponseToken, erro
 func (s *tokenService) UserToken(c echo.Context) (*models.User, error) {
 	token := middleware.GetToken(c)
 	return s.tokenRepo.UserToken(token)
+}
+
+func (s *tokenService) IsAdmin(c echo.Context) bool {
+	user, err := s.UserByToken(c)
+	if err != nil {
+		return false
+	}
+
+	if user.Role == "admin" {
+		return true
+	} else {
+		return false
+	}
 }

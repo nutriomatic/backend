@@ -14,9 +14,9 @@ import (
 )
 
 type UserService interface {
-	CreateUser(registerReq *dto.RegisterForm) error
+	CreateUser(registerReq *dto.Register) error
 	GetUserById(id string) (*models.User, error)
-	GetUserByUsername(username string) (*models.User, error)
+	// GetUserByUsername(username string) (*models.User, error)
 	GetUserByEmail(email string) (*models.User, error)
 	UpdateUser(updateForm *dto.RegisterForm, c echo.Context) (*dto.UserResponseToken, error)
 	DeleteUser(c echo.Context) error
@@ -35,8 +35,7 @@ func NewUserService() UserService {
 	}
 }
 
-func (s *userService) CreateUser(registerReq *dto.RegisterForm) error {
-
+func (s *userService) CreateUser(registerReq *dto.Register) error {
 	al_id, err := NewActivityLevelService().GetIdByType(registerReq.AL_TYPE)
 	if err != nil {
 		return err
@@ -47,24 +46,14 @@ func (s *userService) CreateUser(registerReq *dto.RegisterForm) error {
 	}
 
 	newUser := models.User{
-		ID:         uuid.New().String(),
-		Name:       registerReq.Name,
-		Username:   registerReq.Username,
-		Email:      registerReq.Email,
-		Password:   registerReq.Password,
-		Role:       registerReq.Role,
-		Gender:     registerReq.Gender,
-		Telp:       registerReq.Telp,
-		Profpic:    registerReq.Profpic,
-		Birthdate:  registerReq.Birthdate,
-		Place:      registerReq.Place,
-		Height:     registerReq.Height,
-		Weight:     registerReq.Weight,
-		WeightGoal: registerReq.WeightGoal,
-		AL_ID:      al_id,
-		HG_ID:      hg_id,
-		CreatedAt:  time.Now(),
-		UpdatedAt:  time.Now(),
+		ID:        uuid.New().String(),
+		Name:      registerReq.Name,
+		Email:     registerReq.Email,
+		Password:  registerReq.Password,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+		HG_ID:     hg_id,
+		AL_ID:     al_id,
 	}
 
 	hashed, err := utils.HashPassword(newUser.Password)
@@ -75,9 +64,9 @@ func (s *userService) CreateUser(registerReq *dto.RegisterForm) error {
 	return s.userRepo.CreateUser(&newUser)
 }
 
-func (s *userService) GetUserByUsername(username string) (*models.User, error) {
-	return s.userRepo.GetUserByUsername(username)
-}
+// func (s *userService) GetUserByUsername(username string) (*models.User, error) {
+// 	return s.userRepo.GetUserByUsername(username)
+// }
 
 func (s *userService) GetUserByEmail(email string) (*models.User, error) {
 	return s.userRepo.GetUserByEmail(email)
@@ -102,12 +91,12 @@ func (s *userService) UpdateUser(updateForm *dto.RegisterForm, c echo.Context) (
 		existingUser.Name = updateForm.Name
 	}
 
-	if updateForm.Username != "" {
-		if _, err := s.userRepo.GetUserByUsername(updateForm.Username); err == nil {
-			return nil, echo.NewHTTPError(http.StatusBadRequest, "username already exists")
-		}
-		existingUser.Username = updateForm.Username
-	}
+	// if updateForm.Username != "" {
+	// 	if _, err := s.userRepo.GetUserByUsername(updateForm.Username); err == nil {
+	// 		return nil, echo.NewHTTPError(http.StatusBadRequest, "username already exists")
+	// 	}
+	// 	existingUser.Username = updateForm.Username
+	// }
 
 	if updateForm.Email != "" {
 		if _, err := s.userRepo.GetUserByEmail(updateForm.Email); err == nil {

@@ -100,9 +100,9 @@ func (repo *UserRepositoryGORM) UpdateUser(user *models.User) (*dto.UserResponse
 	}
 
 	response := &dto.UserResponseToken{
-		Id:         user.ID,
-		Name:       user.Name,
-		Username:   user.Username,
+		Id:   user.ID,
+		Name: user.Name,
+		// Username:   user.Username,
 		Email:      user.Email,
 		Role:       user.Role,
 		Gender:     user.Gender,

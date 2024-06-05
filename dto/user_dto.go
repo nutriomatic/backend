@@ -1,9 +1,16 @@
 package dto
 
+type Register struct {
+	Name     string `json:"name"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
+	HG_TYPE  int64  `json:"hg_type"`
+	AL_TYPE  int64  `json:"al_type"`
+}
+
 type (
 	RegisterForm struct {
 		Name       string  `json:"name"`
-		Username   string  `json:"username"`
 		Email      string  `json:"email"`
 		Password   string  `json:"password"`
 		Role       string  `json:"role"`
@@ -20,7 +27,6 @@ type (
 	}
 
 	LoginForm struct {
-		Username string `json:"username"`
 		Email    string `json:"email"`
 		Password string `json:"password"`
 	}
@@ -28,7 +34,6 @@ type (
 	UserResponseToken struct {
 		Id         string  `json:"id"`
 		Name       string  `json:"name"`
-		Username   string  `json:"username"`
 		Email      string  `json:"email"`
 		Role       string  `json:"role"`
 		Gender     int64   `json:"gender"`

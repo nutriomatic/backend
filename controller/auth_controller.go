@@ -31,7 +31,7 @@ func init() {
 }
 
 func (a *authController) Register(c echo.Context) error {
-	registerReq := &dto.RegisterForm{}
+	registerReq := &dto.Register{}
 	err := c.Bind(registerReq)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{
@@ -40,13 +40,13 @@ func (a *authController) Register(c echo.Context) error {
 		})
 	}
 
-	_, err = a.userService.GetUserByUsername(registerReq.Username)
-	if err == nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{
-			"status":  "failed",
-			"message": dto.UsernameExists,
-		})
-	}
+	// _, err = a.userService.GetUserByUsername(registerReq.Username)
+	// if err == nil {
+	// 	return c.JSON(http.StatusBadRequest, map[string]string{
+	// 		"status":  "failed",
+	// 		"message": dto.UsernameExists,
+	// 	})
+	// }
 
 	_, err = a.userService.GetUserByEmail(registerReq.Email)
 	if err == nil {
@@ -85,11 +85,12 @@ func (a *authController) Login(c echo.Context) error {
 	}
 
 	var user *models.User
-	if loginReq.Username == "" {
-		user, err = a.userService.GetUserByEmail(loginReq.Email)
-	} else {
-		user, err = a.userService.GetUserByUsername(loginReq.Username)
-	}
+	// if loginReq.Username == "" {
+	// 	user, err = a.userService.GetUserByEmail(loginReq.Email)
+	// }
+	// else {
+	// 	user, err = a.userService.GetUserByUsername(loginReq.Username)
+	// }
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{
 			"status":  "failed",
