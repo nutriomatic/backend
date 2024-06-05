@@ -1,0 +1,46 @@
+[
+    {
+        "pt_name": "Snacks",
+        "pt_type": 201
+    },
+    {
+        "pt_name": "Chocolate Bar",
+        "pt_type": 202
+    },
+    {
+        "pt_name": "Ice Cream",
+        "pt_type": 203
+    },
+    {
+        "pt_name": "Bread",
+        "pt_type": 204
+    },
+    {
+        "pt_name": "Cheese",
+        "pt_type": 205
+    },
+    {
+        "pt_name": "Frozen Food",
+        "pt_type": 206
+    },
+    {
+        "pt_name": "Water",
+        "pt_type": 301
+    },
+    {
+        "pt_name": "Juice",
+        "pt_type": 302
+    },
+    {
+        "pt_name": "Milk",
+        "pt_type": 303
+    },
+    {
+        "pt_name": "Coffee",
+        "pt_type": 304
+    },
+    {
+        "pt_name": "Tea",
+        "pt_type": 305
+    }
+]

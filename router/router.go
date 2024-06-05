@@ -30,6 +30,7 @@ func InitRouter(e *echo.Echo) {
 	productController := controllers.NewProductController()
 	healthGoalController := controllers.NewHealthGoalController()
 	activityLevelController := controllers.NewActivityLevelController()
+	productTypeController := controllers.NewProductTypeController()
 
 	authGroup := e.Group("/api/auth")
 	authGroup.POST("/register", authController.Register)
@@ -61,4 +62,9 @@ func InitRouter(e *echo.Echo) {
 	activityLevelGroup.POST("/", activityLevelController.CreateActivityLevel)
 	activityLevelGroup.DELETE("/:id", activityLevelController.DeleteActivityLevel)
 	activityLevelGroup.GET("/", activityLevelController.GetAllActivityLevel)
+
+	productTypeGroup := e.Group("/api/product-type")
+	productTypeGroup.POST("/", productTypeController.CreateProductType)
+	productTypeGroup.DELETE("/:id", productTypeController.DeleteProductType)
+	productTypeGroup.GET("/", productTypeController.GetAllProductType)
 }

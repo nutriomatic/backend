@@ -9,8 +9,8 @@ import (
 
 type ProductTypeRepository interface {
 	CreatePT(pt *models.ProductType) error
-	GetIdByType(cat int64) (id string, err error)
-	GetById(id string) (*models.ProductType, error)
+	GetProductTypeIdByType(cat int64) (id string, err error)
+	GetProductTypeById(id string) (*models.ProductType, error)
 	GetAllProductType() ([]models.ProductType, error)
 	UpdatePT(pt *models.ProductType) error
 	DeletePT(id string) error
@@ -34,7 +34,7 @@ func (repo *ProductTypeRepositoryGORM) CreatePT(pt *models.ProductType) error {
 	return nil
 }
 
-func (repo *ProductTypeRepositoryGORM) GetIdByType(cat int64) (id string, err error) {
+func (repo *ProductTypeRepositoryGORM) GetProductTypeIdByType(cat int64) (id string, err error) {
 	pt := &models.ProductType{}
 	err = repo.db.Where("pt_type = ?", cat).First(pt).Error
 	if err != nil {
@@ -43,7 +43,7 @@ func (repo *ProductTypeRepositoryGORM) GetIdByType(cat int64) (id string, err er
 	return pt.PT_ID, nil
 }
 
-func (repo *ProductTypeRepositoryGORM) GetById(id string) (*models.ProductType, error) {
+func (repo *ProductTypeRepositoryGORM) GetProductTypeById(id string) (*models.ProductType, error) {
 	var pt models.ProductType
 	err := repo.db.Where("pt_id = ?", id).First(&pt).Error
 	if err != nil {

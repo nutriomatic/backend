@@ -102,7 +102,7 @@ func (al *ActivityLevelController) GetActivityLevelById(c echo.Context) error {
 	}
 
 	id := c.Param("id")
-	activityLevel, err := al.ActivityLevelService.GetById(id)
+	activityLevel, err := al.ActivityLevelService.GetActivityLevelById(id)
 	if err != nil {
 		response := map[string]interface{}{
 			"status":  "error",

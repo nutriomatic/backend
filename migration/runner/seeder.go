@@ -15,9 +15,10 @@ func main() {
 	}
 
 	// Run seeder function
-	seeder.SeederUser(db)
+	// seeder.SeederUser(db)
 	// seeder.SeederActivityLevel(db)
 	// seeder.SeederHealthGoal(db)
+	seeder.SeederProductType(db)
 
 	fmt.Println("Seeder executed successfully")
 }

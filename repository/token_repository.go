@@ -97,7 +97,7 @@ func (repo *TokenRepositoryGORM) UserByToken(token string) (*dto.UserResponseTok
 		return nil, err
 	}
 
-	al, err := NewActivityLevelRepositoryGORM().GetById(User.AL_ID)
+	al, err := NewActivityLevelRepositoryGORM().GetActivityLevelById(User.AL_ID)
 	if err != nil {
 		return nil, err
 	}

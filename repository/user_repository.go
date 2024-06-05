@@ -89,7 +89,7 @@ func (repo *UserRepositoryGORM) UpdateUser(user *models.User) (*dto.UserResponse
 		return nil, err
 	}
 
-	al, err := NewActivityLevelRepositoryGORM().GetById(user.AL_ID)
+	al, err := NewActivityLevelRepositoryGORM().GetActivityLevelById(user.AL_ID)
 	if err != nil {
 		return nil, err
 	}

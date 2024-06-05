@@ -85,6 +85,7 @@ func (a *authController) Login(c echo.Context) error {
 	}
 
 	var user *models.User
+	user, err = a.userService.GetUserByEmail(loginReq.Email)
 	// if loginReq.Username == "" {
 	// 	user, err = a.userService.GetUserByEmail(loginReq.Email)
 	// }

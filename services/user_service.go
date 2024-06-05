@@ -36,7 +36,7 @@ func NewUserService() UserService {
 }
 
 func (s *userService) CreateUser(registerReq *dto.Register) error {
-	al_id, err := NewActivityLevelService().GetIdByType(registerReq.AL_TYPE)
+	al_id, err := NewActivityLevelService().GetActivityLevelIdByType(registerReq.AL_TYPE)
 	if err != nil {
 		return err
 	}
@@ -149,7 +149,7 @@ func (s *userService) UpdateUser(updateForm *dto.RegisterForm, c echo.Context) (
 	}
 
 	if updateForm.AL_TYPE != 0 {
-		al_id, err := NewActivityLevelService().GetIdByType(updateForm.AL_TYPE)
+		al_id, err := NewActivityLevelService().GetActivityLevelIdByType(updateForm.AL_TYPE)
 		if err != nil {
 			return nil, echo.NewHTTPError(http.StatusInternalServerError, "error retrieving activity level")
 		}

@@ -12,8 +12,8 @@ import (
 )
 
 type ActivityLevelService interface {
-	GetIdByType(cat int64) (id string, err error)
-	GetById(id string) (*models.ActivityLevel, error)
+	GetActivityLevelIdByType(cat int64) (id string, err error)
+	GetActivityLevelById(id string) (*models.ActivityLevel, error)
 	CreateAL(al *dto.ALRegisterForm) error
 	DeleteAL(id string) error
 	GetAllActivityLevel() ([]models.ActivityLevel, error)
@@ -30,7 +30,7 @@ func NewActivityLevelService() ActivityLevelService {
 }
 
 func (alRepo *activityLevelService) CreateAL(al *dto.ALRegisterForm) error {
-	existingAL, _ := alRepo.alRepo.GetIdByType(al.ALType)
+	existingAL, _ := alRepo.alRepo.GetActivityLevelIdByType(al.ALType)
 	if existingAL != "" {
 		return echo.NewHTTPError(http.StatusConflict, "Activity level type already exists")
 	}
@@ -50,12 +50,12 @@ func (alRepo *activityLevelService) GetAllActivityLevel() ([]models.ActivityLeve
 	return alRepo.alRepo.GetAllActivityLevel()
 }
 
-func (alRepo *activityLevelService) GetIdByType(cat int64) (id string, err error) {
-	return alRepo.alRepo.GetIdByType(cat)
+func (alRepo *activityLevelService) GetActivityLevelIdByType(cat int64) (id string, err error) {
+	return alRepo.alRepo.GetActivityLevelIdByType(cat)
 }
 
-func (alRepo *activityLevelService) GetById(id string) (*models.ActivityLevel, error) {
-	return alRepo.alRepo.GetById(id)
+func (alRepo *activityLevelService) GetActivityLevelById(id string) (*models.ActivityLevel, error) {
+	return alRepo.alRepo.GetActivityLevelById(id)
 }
 
 func (alRepo *activityLevelService) DeleteAL(id string) error {

@@ -9,8 +9,8 @@ import (
 
 type ActivityLevelRepository interface {
 	CreateAL(al *models.ActivityLevel) error
-	GetIdByType(cat int64) (id string, err error)
-	GetById(id string) (*models.ActivityLevel, error)
+	GetActivityLevelIdByType(cat int64) (id string, err error)
+	GetActivityLevelById(id string) (*models.ActivityLevel, error)
 	GetAllActivityLevel() ([]models.ActivityLevel, error)
 	UpdateAL(al *models.ActivityLevel) error
 	DeleteAL(id string) error
@@ -34,7 +34,7 @@ func (repo *ActivityLevelRepositoryGORM) CreateAL(al *models.ActivityLevel) erro
 	return nil
 }
 
-func (repo *ActivityLevelRepositoryGORM) GetIdByType(cat int64) (id string, err error) {
+func (repo *ActivityLevelRepositoryGORM) GetActivityLevelIdByType(cat int64) (id string, err error) {
 	al := &models.ActivityLevel{}
 	err = repo.db.Where("al_type = ?", cat).First(al).Error
 	if err != nil {
@@ -43,7 +43,7 @@ func (repo *ActivityLevelRepositoryGORM) GetIdByType(cat int64) (id string, err 
 	return al.AL_ID, nil
 }
 
-func (repo *ActivityLevelRepositoryGORM) GetById(id string) (*models.ActivityLevel, error) {
+func (repo *ActivityLevelRepositoryGORM) GetActivityLevelById(id string) (*models.ActivityLevel, error) {
 	var al models.ActivityLevel
 	err := repo.db.Where("al_id = ?", id).First(&al).Error
 	if err != nil {
