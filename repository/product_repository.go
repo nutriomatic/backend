@@ -4,17 +4,17 @@ import (
 	"golang-template/config"
 	"golang-template/dto"
 	"golang-template/models"
-	"time"
 
-	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
 type ProductRepository interface {
-	CreateProduct(product *dto.ProductRegisterForm, store *models.Store) error
+	CreateProduct(p *models.Product) error
 	GetProductById(id string) (*models.Product, error)
-	GetProductByName(name string) (*models.Product, error)
-	GetProductByStoreId(id string) (*[]models.Product, error)
+	GetProductByStoreId(id string, desc, page, pageSize int, search, sort string) (*[]models.Product, *dto.Pagination, error)
+	GetAllProduct(desc, page, pageSize int, search, sort string) (*[]models.Product, *dto.Pagination, error)
+	UpdateProduct(p *models.Product) error
+	DeleteProduct(id string) error
 }
 
 type ProductRepositoryGORM struct {
@@ -27,38 +27,66 @@ func NewProductRepositoryGORM() *ProductRepositoryGORM {
 	}
 }
 
-func (repo *ProductRepositoryGORM) CreateProduct(product *dto.ProductRegisterForm, store *models.Store) error {
-	newProduct := models.Product{
-		PRODUCT_ID:          uuid.New().String(),
-		PRODUCT_NAME:        product.ProductName,
-		PRODUCT_PRICE:       product.ProductPrice,
-		PRODUCT_DESC:        product.ProductDesc,
-		PRODUCT_ISSHOW:      product.ProductIsShow,
-		PRODUCT_LEMAKTOTAL:  product.ProductLemakTotal,
-		PRODUCT_PROTEIN:     product.ProductProtein,
-		PRODUCT_KARBOHIDRAT: product.ProductKarbohidrat,
-		PRODUCT_GARAM:       product.ProductGaram,
-		STORE_ID:            store.STORE_ID,
-		CreatedAt:           time.Now(),
-		UpdatedAt:           time.Now(),
+func (repo *ProductRepositoryGORM) CreateProduct(p *models.Product) error {
+	err := repo.db.Create(p).Error
+	if err != nil {
+		return err
 	}
-	return repo.db.Create(&newProduct).Error
+
+	return nil
 }
 
 func (repo *ProductRepositoryGORM) GetProductById(id string) (*models.Product, error) {
-	var product models.Product
-	err := repo.db.Where("PRODUCT_ID = ?", id).First(&product).Error
-	return &product, err
+	var p models.Product
+	err := repo.db.Where("product_id = ?", id).First(&p).Error
+	if err != nil {
+		return nil, err
+	}
+	return &p, nil
 }
 
-func (repo *ProductRepositoryGORM) GetProductByName(name string) (*models.Product, error) {
-	var product models.Product
-	err := repo.db.Where("PRODUCT_NAME = ?", name).First(&product).Error
-	return &product, err
+func (repo *ProductRepositoryGORM) GetProductByStoreId(id string, desc, page, pageSize int, search, sort string) (*[]models.Product, *dto.Pagination, error) {
+	var p []models.Product
+	query := repo.db.Where("store_id = ?", id).Find(&p)
+
+	if search != "" {
+		query = query.Where("product_name LIKE ?", "%"+search+"%")
+	}
+
+	if sort != "" {
+		query = query.Order(sort)
+	}
+
+	pagination, err := dto.GetPaginated(query, page, pageSize, &p)
+	if err != nil {
+		return nil, nil, err
+	}
+	return &p, pagination, nil
 }
 
-func (repo *ProductRepositoryGORM) GetProductByStoreId(id string) (*[]models.Product, error) {
-	var products []models.Product
-	err := repo.db.Where("STORE_ID = ?", id).Find(&products).Error
-	return &products, err
+func (repo *ProductRepositoryGORM) GetAllProduct(desc, page, pageSize int, search, sort string) (*[]models.Product, *dto.Pagination, error) {
+	var p []models.Product
+	query := repo.db.Find(&p)
+
+	if search != "" {
+		query = query.Where("product_name LIKE ?", "%"+search+"%")
+	}
+
+	if sort != "" {
+		query = query.Order(sort)
+	}
+
+	pagination, err := dto.GetPaginated(query, page, pageSize, &p)
+	if err != nil {
+		return nil, nil, err
+	}
+	return &p, pagination, nil
+}
+
+func (repo *ProductRepositoryGORM) UpdateProduct(p *models.Product) error {
+	return repo.db.Save(p).Error
+}
+
+func (repo *ProductRepositoryGORM) DeleteProduct(id string) error {
+	return repo.db.Where("product_id = ?", id).Delete(&models.Product{}).Error
 }

@@ -17,6 +17,7 @@ type ProductTypeService interface {
 	CreatePT(pt *dto.PTRegisterForm) error
 	DeletePT(id string) error
 	GetAllProductType() ([]models.ProductType, error)
+	GetProductTypeIdByName(name string) (id string, err error)
 }
 
 type productTypeService struct {
@@ -60,4 +61,8 @@ func (ptRepo *productTypeService) GetProductTypeById(id string) (*models.Product
 
 func (ptRepo *productTypeService) DeletePT(id string) error {
 	return ptRepo.ptRepo.DeletePT(id)
+}
+
+func (ptRepo *productTypeService) GetProductTypeIdByName(name string) (id string, err error) {
+	return ptRepo.ptRepo.GetProductTypeIdByName(name)
 }

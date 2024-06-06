@@ -4,6 +4,7 @@ import (
 	"golang-template/dto"
 	"golang-template/services"
 	"net/http"
+	"strconv"
 
 	echo "github.com/labstack/echo/v4"
 )
@@ -11,61 +12,195 @@ import (
 type productController struct {
 	ProductService services.ProductService
 	TokenService   services.TokenService
+	StoreService   services.StoreService
 }
 
 func NewProductController() *productController {
 	return &productController{
 		ProductService: services.NewProductService(),
 		TokenService:   services.NewTokenService(),
+		StoreService:   services.NewStoreService(),
 	}
 }
 
-func (s *productController) CreateProduct(c echo.Context) error {
-	user, err := s.TokenService.UserToken(c)
+func (pc *productController) CreateProduct(c echo.Context) error {
+	_, err := pc.TokenService.UserByToken(c)
 	if err != nil {
 		return echo.ErrUnauthorized
-	} else {
-		productForm := &dto.ProductRegisterForm{}
-		err := c.Bind(productForm)
+	}
 
-		if err != nil {
-			response := map[string]interface{}{
-				"status":  "error",
-				"message": "All product fields must be provided!",
-			}
-			return c.JSON(http.StatusBadRequest, response)
-		}
-
-		store, err := services.NewStoreService().GetStoreByUserId(user.ID)
-		if err != nil {
-			response := map[string]interface{}{
-				"status":  "error",
-				"message": "store not found",
-			}
-			return c.JSON(http.StatusNotFound, response)
-		}
-
-		err = s.ProductService.CreateProduct(productForm, store)
-		if err != nil {
-			httpError, ok := err.(*echo.HTTPError)
-			if ok {
-				response := map[string]interface{}{
-					"status":  "error",
-					"message": httpError.Message,
-				}
-				return c.JSON(httpError.Code, response)
-			}
-			response := map[string]interface{}{
-				"status":  "error",
-				"message": "internal server error",
-			}
-			return c.JSON(http.StatusInternalServerError, response)
-		}
+	err = pc.ProductService.CreateProduct(c)
+	if err != nil {
+		return echo.NewHTTPError(400, err.Error())
 	}
 
 	response := map[string]interface{}{
 		"status":  "success",
-		"message": "product registration was successful",
+		"message": "Product created successfully",
+	}
+	return c.JSON(http.StatusOK, response)
+}
+
+func (pc *productController) GetProductById(c echo.Context) error {
+	id := c.Param("id")
+	product, err := pc.ProductService.GetProductById(id)
+	if err != nil {
+		return echo.NewHTTPError(400, err.Error())
+	}
+
+	response := map[string]interface{}{
+		"status":  "success",
+		"product": product,
+	}
+
+	return c.JSON(http.StatusOK, response)
+}
+
+func (pc *productController) GetProductByStoreId(c echo.Context) error {
+	id := c.Param("id")
+	page := 1
+	pageSize := 10
+
+	if qp := c.QueryParam("page"); qp != "" {
+		if p, err := strconv.Atoi(qp); err == nil {
+			page = p
+		}
+	}
+
+	if qp := c.QueryParam("pageSize"); qp != "" {
+		if ps, err := strconv.Atoi(qp); err == nil {
+			pageSize = ps
+		}
+	}
+
+	sort := c.QueryParam("sort")
+	if sort != "" && !dto.IsValidSortField(sort) {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid sort fields"})
+	}
+
+	var desc int
+	if qp := c.QueryParam("desc"); qp != "" {
+		if ds, err := strconv.Atoi(qp); err == nil {
+			desc = ds
+		}
+	}
+
+	var search string
+	if sp := c.QueryParam("search"); sp != "" {
+		search = sp
+	}
+
+	products, pagination, err := pc.ProductService.GetProductByStoreId(id, desc, page, pageSize, search, sort)
+	if err != nil {
+		return echo.NewHTTPError(400, err.Error())
+	}
+
+	response := map[string]interface{}{
+		"status":     "success",
+		"product":    products,
+		"pagination": pagination,
+	}
+
+	return c.JSON(http.StatusOK, response)
+}
+
+func (pc *productController) GetAllProduct(c echo.Context) error {
+	page := 1
+	pageSize := 10
+
+	if qp := c.QueryParam("page"); qp != "" {
+		if p, err := strconv.Atoi(qp); err == nil {
+			page = p
+		}
+	}
+
+	if qp := c.QueryParam("pageSize"); qp != "" {
+		if ps, err := strconv.Atoi(qp); err == nil {
+			pageSize = ps
+		}
+	}
+
+	sort := c.QueryParam("sort")
+	if sort != "" && !dto.IsValidSortField(sort) {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid sort fields"})
+	}
+
+	var desc int
+	if qp := c.QueryParam("desc"); qp != "" {
+		if ds, err := strconv.Atoi(qp); err == nil {
+			desc = ds
+		}
+	}
+
+	var search string
+	if sp := c.QueryParam("search"); sp != "" {
+		search = sp
+	}
+
+	products, pagination, err := pc.ProductService.GetAllProduct(desc, page, pageSize, search, sort)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+
+	response := map[string]interface{}{
+		"status":     "success",
+		"products":   products,
+		"pagination": pagination,
+	}
+
+	return c.JSON(http.StatusOK, response)
+}
+
+func (pc *productController) UpdateProduct(c echo.Context) error {
+	id := c.Param("id")
+	err := pc.ProductService.CheckProductStore(id, c)
+	if err != nil {
+		response := map[string]interface{}{
+			"status":  "failed",
+			"message": "unauthorized",
+		}
+		return c.JSON(http.StatusForbidden, response)
+	}
+
+	err = pc.ProductService.UpdateProduct(c, id)
+	if err != nil {
+		response := map[string]interface{}{
+			"status":  "failed",
+			"message": err.Error(),
+		}
+		return c.JSON(http.StatusInternalServerError, response)
+	}
+
+	response := map[string]interface{}{
+		"status":  "success",
+		"message": "Product updated successfully",
+	}
+	return c.JSON(http.StatusOK, response)
+}
+
+func (pc *productController) DeleteProduct(c echo.Context) error {
+	id := c.Param("id")
+	err := pc.ProductService.CheckProductStore(id, c)
+	if err != nil {
+		response := map[string]interface{}{
+			"status":  "failed",
+			"message": "unauthorized",
+		}
+		return c.JSON(http.StatusForbidden, response)
+	}
+
+	err = pc.ProductService.DeleteProduct(id)
+	if err != nil {
+		response := map[string]interface{}{
+			"status":  "failed",
+			"message": err.Error(),
+		}
+		return c.JSON(http.StatusInternalServerError, response)
+	}
+
+	response := map[string]interface{}{
+		"status":  "success",
+		"message": "Product deleted successfully",
 	}
 	return c.JSON(http.StatusOK, response)
 }

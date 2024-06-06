@@ -14,6 +14,7 @@ type ProductTypeRepository interface {
 	GetAllProductType() ([]models.ProductType, error)
 	UpdatePT(pt *models.ProductType) error
 	DeletePT(id string) error
+	GetProductTypeIdByName(name string) (id string, err error)
 }
 
 type ProductTypeRepositoryGORM struct {
@@ -32,6 +33,15 @@ func (repo *ProductTypeRepositoryGORM) CreatePT(pt *models.ProductType) error {
 		return err
 	}
 	return nil
+}
+
+func (repo *ProductTypeRepositoryGORM) GetProductTypeIdByName(name string) (id string, err error) {
+	pt := &models.ProductType{}
+	err = repo.db.Where("pt_name = ?", name).First(pt).Error
+	if err != nil {
+		return "", err
+	}
+	return pt.PT_ID, nil
 }
 
 func (repo *ProductTypeRepositoryGORM) GetProductTypeIdByType(cat int64) (id string, err error) {

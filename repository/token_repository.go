@@ -72,14 +72,21 @@ func (repo *TokenRepositoryGORM) UserToken(token string) (*models.User, error) {
 
 	err := repo.db.Where("token = ?", token).Where("expires_at > ?", time.Now()).First(&AccessToken).Error
 	if err != nil {
-		return nil, err
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New("invalid or expired token")
+		}
+		return nil, errors.New("database error while fetching token")
 	}
+
 	err = repo.db.Where("id = ?", AccessToken.UserId).First(&User).Error
 	if err != nil {
-		return nil, err
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New("user not found")
+		}
+		return nil, errors.New("database error while fetching user")
 	}
-	return &User, nil
 
+	return &User, nil
 }
 
 func (repo *TokenRepositoryGORM) UserByToken(token string) (*dto.UserResponseToken, error) {
