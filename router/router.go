@@ -57,6 +57,8 @@ func InitRouter(e *echo.Echo) {
 	productGroup.GET("/", productController.GetAllProduct)
 	productGroup.PATCH("/:id", productController.UpdateProduct)
 	productGroup.DELETE("/:id", productController.DeleteProduct)
+	productGroup.GET("/advertise/:id", productController.AdvertiseProduct)
+	productGroup.GET("/unadvertise/:id", productController.UnadvertiseProduct)
 
 	healthGoalGroup := e.Group("/api/health-goal")
 	healthGoalGroup.POST("/", healthGoalController.CreateHealthGoal)

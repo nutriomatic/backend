@@ -24,6 +24,8 @@ type ProductService interface {
 	UpdateProduct(c echo.Context, id string) error
 	DeleteProduct(id string) error
 	CheckProductStore(id string, c echo.Context) error
+	AdvertiseProduct(c echo.Context, id string) error
+	UnadvertiseProduct(c echo.Context, id string) error
 }
 
 type productService struct {
@@ -76,13 +78,13 @@ func ParseProductForm(c echo.Context) (*dto.ProductRegisterForm, error) {
 	productName := c.FormValue("product_name")
 	productPriceStr := c.FormValue("product_price")
 	productDesc := c.FormValue("product_desc")
-	productIsShowStr := c.FormValue("product_isShow")
-	productLemakTotalStr := c.FormValue("product_lemakTotal")
+	productIsShowStr := c.FormValue("product_isshow")
+	productLemakTotalStr := c.FormValue("product_lemaktotal")
 	productProteinStr := c.FormValue("product_protein")
 	productKarbohidratStr := c.FormValue("product_karbohidrat")
 	productGaramStr := c.FormValue("product_garam")
 	productGrade := c.FormValue("product_grade")
-	productServingSizeStr := c.FormValue("product_servingSize")
+	productServingSizeStr := c.FormValue("product_servingsize")
 	ptName := c.FormValue("pt_name")
 
 	productPrice, err := strconv.ParseFloat(productPriceStr, 64)
@@ -125,6 +127,7 @@ func ParseProductForm(c echo.Context) (*dto.ProductRegisterForm, error) {
 		ProductGaram:       productGaram,
 		ProductGrade:       productGrade,
 		ProductServingSize: productServingSize,
+		ProductExpShow:     "",
 		PT_Name:            ptName,
 	}, nil
 }
@@ -168,6 +171,7 @@ func (service *productService) CreateProduct(c echo.Context) error {
 		PRODUCT_SERVINGSIZE: productForm.ProductServingSize,
 		PRODUCT_PICTURE:     imagePath,
 		PRODUCT_GRADING:     productForm.ProductGrade,
+		PRODUCT_EXPSHOW:     time.Now(),
 		CreatedAt:           time.Now(),
 		UpdatedAt:           time.Now(),
 		STORE_ID:            store.STORE_ID,
@@ -286,4 +290,35 @@ func (service *productService) DeleteProduct(id string) error {
 	}
 	service.uploader.DeleteImage(product.PRODUCT_PICTURE)
 	return service.productRepo.DeleteProduct(id)
+}
+
+func (service *productService) AdvertiseProduct(c echo.Context, id string) error {
+	product, err := service.GetProductById(id)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusNotFound, "Product not found")
+	}
+
+	product.PRODUCT_ISSHOW = true
+	product.PRODUCT_EXPSHOW = time.Now().AddDate(0, 1, 0)
+	err = service.productRepo.UpdateProduct(product)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Internal server error")
+	}
+
+	return c.JSON(http.StatusOK, product)
+}
+
+func (service *productService) UnadvertiseProduct(c echo.Context, id string) error {
+	product, err := service.GetProductById(id)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusNotFound, "Product not found")
+	}
+
+	product.PRODUCT_ISSHOW = false
+	err = service.productRepo.UpdateProduct(product)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Internal server error")
+	}
+
+	return c.JSON(http.StatusOK, product)
 }

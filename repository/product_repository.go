@@ -28,7 +28,7 @@ func NewProductRepositoryGORM() *ProductRepositoryGORM {
 }
 
 func (repo *ProductRepositoryGORM) CreateProduct(p *models.Product) error {
-	err := repo.db.Create(p).Error
+	err := repo.db.Create(&p).Error
 	if err != nil {
 		return err
 	}

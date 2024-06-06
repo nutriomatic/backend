@@ -204,3 +204,57 @@ func (pc *productController) DeleteProduct(c echo.Context) error {
 	}
 	return c.JSON(http.StatusOK, response)
 }
+
+func (pc *productController) AdvertiseProduct(c echo.Context) error {
+	id := c.Param("id")
+	err := pc.ProductService.CheckProductStore(id, c)
+	if err != nil {
+		response := map[string]interface{}{
+			"status":  "failed",
+			"message": "unauthorized",
+		}
+		return c.JSON(http.StatusForbidden, response)
+	}
+
+	err = pc.ProductService.AdvertiseProduct(c, id)
+	if err != nil {
+		response := map[string]interface{}{
+			"status":  "failed",
+			"message": err.Error(),
+		}
+		return c.JSON(http.StatusInternalServerError, response)
+	}
+
+	response := map[string]interface{}{
+		"status":  "success",
+		"message": "Product advertised successfully",
+	}
+	return c.JSON(http.StatusOK, response)
+}
+
+func (pc *productController) UnadvertiseProduct(c echo.Context) error {
+	id := c.Param("id")
+	err := pc.ProductService.CheckProductStore(id, c)
+	if err != nil {
+		response := map[string]interface{}{
+			"status":  "failed",
+			"message": "unauthorized",
+		}
+		return c.JSON(http.StatusForbidden, response)
+	}
+
+	err = pc.ProductService.UnadvertiseProduct(c, id)
+	if err != nil {
+		response := map[string]interface{}{
+			"status":  "failed",
+			"message": err.Error(),
+		}
+		return c.JSON(http.StatusInternalServerError, response)
+	}
+
+	response := map[string]interface{}{
+		"status":  "success",
+		"message": "Product unadvertised successfully",
+	}
+	return c.JSON(http.StatusOK, response)
+}
