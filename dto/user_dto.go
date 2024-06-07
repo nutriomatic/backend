@@ -1,5 +1,7 @@
 package dto
 
+import "mime/multipart"
+
 type Register struct {
 	Name     string `json:"name"`
 	Email    string `json:"email"`
@@ -10,20 +12,21 @@ type Register struct {
 
 type (
 	RegisterForm struct {
-		Name       string  `json:"name"`
-		Email      string  `json:"email"`
-		Password   string  `json:"password"`
-		Role       string  `json:"role"`
-		Gender     int64   `json:"gender"`
-		Telp       string  `json:"telp"`
-		Profpic    string  `json:"profpic"`
-		Birthdate  string  `json:"birthdate"`
-		Place      string  `json:"place"`
-		Height     float64 `json:"height"`
-		Weight     float64 `json:"weight"`
-		WeightGoal float64 `json:"weight_goal"`
-		AL_TYPE    int64   `json:"al_type"`
-		HG_TYPE    int64   `json:"hg_type"`
+		Name       string                `json:"name"`
+		Email      string                `json:"email"`
+		// Password   string                `json:"password"`
+		// Role       string                `json:"role"`
+		Gender     int64                 `json:"gender"`
+		Telp       string                `json:"telp"`
+		Profpic    string                `json:"profpic"`
+		Birthdate  string                `json:"birthdate"`
+		// Place      string                `json:"place"`
+		Height     float64               `json:"height"`
+		Weight     float64               `json:"weight"`
+		WeightGoal float64               `json:"weight_goal"`
+		AL_DESC    string                `json:"al_desc"`
+		HG_DESC    string                `json:"hg_desc"`
+		File       *multipart.FileHeader `json:"-"`
 	}
 
 	LoginForm struct {

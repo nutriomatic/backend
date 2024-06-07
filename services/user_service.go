@@ -7,6 +7,7 @@ import (
 	"golang-template/repository"
 	"golang-template/utils"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/google/uuid"
@@ -18,7 +19,7 @@ type UserService interface {
 	GetUserById(id string) (*models.User, error)
 	// GetUserByUsername(username string) (*models.User, error)
 	GetUserByEmail(email string) (*models.User, error)
-	UpdateUser(updateForm *dto.RegisterForm, c echo.Context) (*dto.UserResponseToken, error)
+	// UpdateUser(updateForm *dto.RegisterForm, c echo.Context) (*dto.UserResponseToken, error)
 	DeleteUser(c echo.Context) error
 	Logout(c echo.Context) error
 }
@@ -33,6 +34,44 @@ func NewUserService() UserService {
 		userRepo:  repository.NewUserRepositoryGORM(),
 		tokenRepo: repository.NewTokenRepositoryGORM(),
 	}
+}
+
+func ParseUserForm(c echo.Context) (*dto.RegisterForm, error) {
+	name := c.FormValue("name")
+	email := c.FormValue("email")
+	gender, err := strconv.Atoi(c.FormValue("gender"))
+	if err != nil {
+		return nil, echo.NewHTTPError(http.StatusBadRequest, "gender bad request")
+	}
+	telp := c.FormValue("telp")
+	birthdate := c.FormValue("birthdate")
+	height, err := strconv.ParseFloat(c.FormValue("height"), 64)
+	if err != nil {
+		return nil, echo.NewHTTPError(http.StatusBadRequest, "height bad request")
+	}
+	weight, err := strconv.ParseFloat(c.FormValue("weight"), 64)
+	if err != nil {
+		return nil, echo.NewHTTPError(http.StatusBadRequest, "weight bad request")
+	}
+	weightGoal, err := strconv.ParseFloat(c.FormValue("weight_goal"), 64)
+	if err != nil {
+		return nil, echo.NewHTTPError(http.StatusBadRequest, "weight goal bad request")
+	}
+	AL_DESC := c.FormValue("al_desc")
+	HG_DESC := c.FormValue("hg_desc")
+
+	return &dto.RegisterForm{
+		Name:       name,
+		Email:      email,
+		Gender:     int64(gender),
+		Telp:       telp,
+		Birthdate:  birthdate,
+		Height:     height,
+		Weight:     weight,
+		WeightGoal: weightGoal,
+		AL_DESC:    AL_DESC,
+		HG_DESC:    HG_DESC,
+	}, nil
 }
 
 func (s *userService) CreateUser(registerReq *dto.Register) error {
@@ -76,103 +115,103 @@ func (s *userService) GetUserById(id string) (*models.User, error) {
 	return s.userRepo.GetUserById(id)
 }
 
-func (s *userService) UpdateUser(updateForm *dto.RegisterForm, c echo.Context) (*dto.UserResponseToken, error) {
-	tokenUser, err := s.tokenRepo.UserToken(middleware.GetToken(c))
-	if err != nil {
-		return nil, echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized")
-	}
+// func (s *userService) UpdateUser(updateForm *dto.RegisterForm, c echo.Context) (*dto.UserResponseToken, error) {
+// 	tokenUser, err := s.tokenRepo.UserToken(middleware.GetToken(c))
+// 	if err != nil {
+// 		return nil, echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized")
+// 	}
 
-	existingUser, err := s.userRepo.GetUserById(tokenUser.ID)
-	if err != nil {
-		return nil, echo.NewHTTPError(http.StatusInternalServerError, "error retrieving user")
-	}
+// 	existingUser, err := s.userRepo.GetUserById(tokenUser.ID)
+// 	if err != nil {
+// 		return nil, echo.NewHTTPError(http.StatusInternalServerError, "error retrieving user")
+// 	}
 
-	if updateForm.Name != "" {
-		existingUser.Name = updateForm.Name
-	}
+// 	if updateForm.Name != "" {
+// 		existingUser.Name = updateForm.Name
+// 	}
 
-	// if updateForm.Username != "" {
-	// 	if _, err := s.userRepo.GetUserByUsername(updateForm.Username); err == nil {
-	// 		return nil, echo.NewHTTPError(http.StatusBadRequest, "username already exists")
-	// 	}
-	// 	existingUser.Username = updateForm.Username
-	// }
+// 	// if updateForm.Username != "" {
+// 	// 	if _, err := s.userRepo.GetUserByUsername(updateForm.Username); err == nil {
+// 	// 		return nil, echo.NewHTTPError(http.StatusBadRequest, "username already exists")
+// 	// 	}
+// 	// 	existingUser.Username = updateForm.Username
+// 	// }
 
-	if updateForm.Email != "" {
-		if _, err := s.userRepo.GetUserByEmail(updateForm.Email); err == nil {
-			return nil, echo.NewHTTPError(http.StatusBadRequest, "email already exists")
-		}
-		existingUser.Email = updateForm.Email
-	}
+// 	if updateForm.Email != "" {
+// 		if _, err := s.userRepo.GetUserByEmail(updateForm.Email); err == nil {
+// 			return nil, echo.NewHTTPError(http.StatusBadRequest, "email already exists")
+// 		}
+// 		existingUser.Email = updateForm.Email
+// 	}
 
-	if updateForm.Password != "" {
-		if !utils.ValidateLengthPassword(updateForm.Password) {
-			return nil, echo.NewHTTPError(http.StatusBadRequest, "invalid password format")
-		}
-		hashedPassword, err := utils.HashPassword(updateForm.Password)
-		if err != nil {
-			return nil, echo.NewHTTPError(http.StatusInternalServerError, "error hashing password")
-		}
-		existingUser.Password = hashedPassword
-	}
+// 	if updateForm.Password != "" {
+// 		if !utils.ValidateLengthPassword(updateForm.Password) {
+// 			return nil, echo.NewHTTPError(http.StatusBadRequest, "invalid password format")
+// 		}
+// 		hashedPassword, err := utils.HashPassword(updateForm.Password)
+// 		if err != nil {
+// 			return nil, echo.NewHTTPError(http.StatusInternalServerError, "error hashing password")
+// 		}
+// 		existingUser.Password = hashedPassword
+// 	}
 
-	if updateForm.Gender != 0 {
-		existingUser.Gender = updateForm.Gender
-	}
+// 	if updateForm.Gender != 0 {
+// 		existingUser.Gender = updateForm.Gender
+// 	}
 
-	if updateForm.Telp != "" {
-		existingUser.Telp = updateForm.Telp
-	}
+// 	if updateForm.Telp != "" {
+// 		existingUser.Telp = updateForm.Telp
+// 	}
 
-	if updateForm.Profpic != "" {
-		existingUser.Profpic = updateForm.Profpic
-	}
+// 	if updateForm.Profpic != "" {
+// 		existingUser.Profpic = updateForm.Profpic
+// 	}
 
-	if updateForm.Birthdate != "" {
-		existingUser.Birthdate = updateForm.Birthdate
-	}
+// 	if updateForm.Birthdate != "" {
+// 		existingUser.Birthdate = updateForm.Birthdate
+// 	}
 
-	if updateForm.Place != "" {
-		existingUser.Place = updateForm.Place
-	}
+// 	if updateForm.Place != "" {
+// 		existingUser.Place = updateForm.Place
+// 	}
 
-	if updateForm.Height != 0 {
-		existingUser.Height = updateForm.Height
-	}
+// 	if updateForm.Height != 0 {
+// 		existingUser.Height = updateForm.Height
+// 	}
 
-	if updateForm.Weight != 0 {
-		existingUser.Weight = updateForm.Weight
-	}
+// 	if updateForm.Weight != 0 {
+// 		existingUser.Weight = updateForm.Weight
+// 	}
 
-	if updateForm.WeightGoal != 0 {
-		existingUser.WeightGoal = updateForm.WeightGoal
-	}
+// 	if updateForm.WeightGoal != 0 {
+// 		existingUser.WeightGoal = updateForm.WeightGoal
+// 	}
 
-	if updateForm.AL_TYPE != 0 {
-		al_id, err := NewActivityLevelService().GetActivityLevelIdByType(updateForm.AL_TYPE)
-		if err != nil {
-			return nil, echo.NewHTTPError(http.StatusInternalServerError, "error retrieving activity level")
-		}
-		existingUser.AL_ID = al_id
-	}
+// 	if updateForm.AL_TYPE != 0 {
+// 		al_id, err := NewActivityLevelService().GetActivityLevelIdByType(updateForm.AL_TYPE)
+// 		if err != nil {
+// 			return nil, echo.NewHTTPError(http.StatusInternalServerError, "error retrieving activity level")
+// 		}
+// 		existingUser.AL_ID = al_id
+// 	}
 
-	if updateForm.HG_TYPE != 0 {
-		hg_id, err := NewHealthGoalService().GetIdByType(updateForm.HG_TYPE)
-		if err != nil {
-			return nil, echo.NewHTTPError(http.StatusInternalServerError, "error retrieving health goal")
-		}
-		existingUser.HG_ID = hg_id
-	}
+// 	if updateForm.HG_TYPE != 0 {
+// 		hg_id, err := NewHealthGoalService().GetIdByType(updateForm.HG_TYPE)
+// 		if err != nil {
+// 			return nil, echo.NewHTTPError(http.StatusInternalServerError, "error retrieving health goal")
+// 		}
+// 		existingUser.HG_ID = hg_id
+// 	}
 
-	existingUser.UpdatedAt = time.Now()
+// 	existingUser.UpdatedAt = time.Now()
 
-	updatedUser, err := s.userRepo.UpdateUser(existingUser)
-	if err != nil {
-		return nil, echo.NewHTTPError(http.StatusInternalServerError, "error updating user")
-	}
+// 	updatedUser, err := s.userRepo.UpdateUser(existingUser)
+// 	if err != nil {
+// 		return nil, echo.NewHTTPError(http.StatusInternalServerError, "error updating user")
+// 	}
 
-	return updatedUser, nil
-}
+// 	return updatedUser, nil
+// }
 
 func (s *userService) DeleteUser(c echo.Context) error {
 	tokenUser, err := s.tokenRepo.UserByToken(middleware.GetToken(c))

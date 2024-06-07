@@ -40,7 +40,7 @@ func InitRouter(e *echo.Echo) {
 
 	userGroup := e.Group("/api/user")
 	// userGroup.Use(middleware.GetTokenNext)
-	userGroup.PATCH("/", userController.UpdateUser)
+	// userGroup.PATCH("/", userController.UpdateUser)
 	userGroup.DELETE("/", userController.DeleteUser)
 
 	storeGroup := e.Group("/api/store")

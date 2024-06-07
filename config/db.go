@@ -17,25 +17,17 @@ import (
 )
 
 func InitDB() *gorm.DB {
-	err1 := godotenv.Load(".env")
-	if err1 != nil {
-		logrus.Error("Error loading env file")
+	err := godotenv.Load(".env")
+	if err != nil {
+		logrus.Error("Error loading env file:", err)
 	}
 
-	dbHost := os.Getenv("DB_HOST")
 	dbUser := os.Getenv("DB_USER")
-	dbPassword := os.Getenv("DB_PASSWORD")
+	dbPassword := os.Getenv("DB_PASS")
 	dbName := os.Getenv("DB_NAME")
-	dbPort := os.Getenv("DB_PORT")
+	dbHost := os.Getenv("DB_HOST")
 
-	// dbURI := fmt.Sprintf("host=%v user=%v password=%v dbname=%v port=%v TimeZone=Asia/Jakarta", dbHost, dbUser, dbPassword, dbName, dbPort)
-	dbURI := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local", dbUser, dbPassword, dbHost, dbPort, dbName)
-
-	// var err error
-	// db, err := gorm.Open(postgres.New(postgres.Config{
-	// 	DSN:                  dbURI,
-	// 	PreferSimpleProtocol: true,
-	// }), &gorm.Config{})
+	dbURI := fmt.Sprintf("%s:%s@tcp(%s:3306)/%s?charset=utf8mb4&parseTime=True&loc=Local", dbUser, dbPassword, dbHost, dbName)
 
 	newLogger := logger.New(
 		logrus.New(), // Use logrus for logging
@@ -52,13 +44,12 @@ func InitDB() *gorm.DB {
 	})
 
 	if err != nil {
-		panic(err)
+		log.Fatalf("Failed to connect to database: %v", err)
 	}
 
 	if err := UpdateProductIsShow(db); err != nil {
 		log.Fatalf("Failed to update product_isShow: %v", err)
 	}
-	// err = db.AutoMigrate(&models.Store{}, &models.HealthGoal{}, &models.ActivityLevel{}, &models.User{}, &models.ProductType{}, &models.Product{}) // , &models.Theater{}, &models.Screening{}, , &models.Employee{}
 
 	fmt.Println("Database connection successful")
 	return db
