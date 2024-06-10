@@ -15,6 +15,8 @@ type ProductRepository interface {
 	GetAllProduct(desc, page, pageSize int, search, sort string) (*[]models.Product, *dto.Pagination, error)
 	UpdateProduct(p *models.Product) error
 	DeleteProduct(id string) error
+	GetAllProductAdvertisement(desc, page, pageSize int, search, sort string) ([]models.Product, *dto.Pagination, error)
+	GetAllProductAdvertisementByStoreId(id string, desc, page, pageSize int, search, sort string) ([]models.Product, *dto.Pagination, error)
 }
 
 type ProductRepositoryGORM struct {
@@ -89,4 +91,42 @@ func (repo *ProductRepositoryGORM) UpdateProduct(p *models.Product) error {
 
 func (repo *ProductRepositoryGORM) DeleteProduct(id string) error {
 	return repo.db.Where("product_id = ?", id).Delete(&models.Product{}).Error
+}
+
+func (repo *ProductRepositoryGORM) GetAllProductAdvertisement(desc, page, pageSize int, search, sort string) ([]models.Product, *dto.Pagination, error) {
+	var p []models.Product
+	query := repo.db.Where("product_isshow = ?", 1).Find(&p)
+
+	if search != "" {
+		query = query.Where("product_name LIKE ?", "%"+search+"%")
+	}
+
+	if sort != "" {
+		query = query.Order(sort)
+	}
+
+	pagination, err := dto.GetPaginated(query, page, pageSize, &p)
+	if err != nil {
+		return nil, nil, err
+	}
+	return p, pagination, nil
+}
+
+func (repo *ProductRepositoryGORM) GetAllProductAdvertisementByStoreId(id string, desc, page, pageSize int, search, sort string) ([]models.Product, *dto.Pagination, error) {
+	var p []models.Product
+	query := repo.db.Where("store_id = ? AND product_isshow = ?", id, 1).Find(&p)
+
+	if search != "" {
+		query = query.Where("product_name LIKE ?", "%"+search+"%")
+	}
+
+	if sort != "" {
+		query = query.Order(sort)
+	}
+
+	pagination, err := dto.GetPaginated(query, page, pageSize, &p)
+	if err != nil {
+		return nil, nil, err
+	}
+	return p, pagination, nil
 }

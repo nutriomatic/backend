@@ -36,6 +36,31 @@ func (s *storeController) CreateStore(c echo.Context) error {
 			return c.JSON(http.StatusBadRequest, response)
 		}
 
+		isStore, err := s.StoreService.GetStoreByUserId(user.ID)
+		if err != nil {
+			httpError, ok := err.(*echo.HTTPError)
+			if ok {
+				response := map[string]interface{}{
+					"status":  "error",
+					"message": httpError.Message,
+				}
+				return c.JSON(httpError.Code, response)
+			}
+			response := map[string]interface{}{
+				"status":  "error",
+				"message": "internal server error",
+			}
+			return c.JSON(http.StatusInternalServerError, response)
+		}
+
+		if isStore != nil {
+			response := map[string]interface{}{
+				"status":  "error",
+				"message": "store already exists",
+			}
+			return c.JSON(http.StatusBadRequest, response)
+		}
+
 		err = s.StoreService.CreateStore(StoreForm, user)
 		if err != nil {
 			httpError, ok := err.(*echo.HTTPError)

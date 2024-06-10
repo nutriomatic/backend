@@ -1,12 +1,10 @@
 package services
 
 import (
-	"fmt"
 	"golang-template/dto"
 	"golang-template/middleware"
 	"golang-template/models"
 	"golang-template/repository"
-	"math/rand"
 	"net/http"
 	"strconv"
 	"time"
@@ -16,7 +14,6 @@ import (
 )
 
 type ProductService interface {
-	UploadImage(c echo.Context) (string, error)
 	CreateProduct(c echo.Context) error
 	GetProductById(id string) (*models.Product, error)
 	GetProductByStoreId(id string, desc, page, pageSize int, search, sort string) (*[]models.Product, *dto.Pagination, error)
@@ -26,6 +23,8 @@ type ProductService interface {
 	CheckProductStore(id string, c echo.Context) error
 	AdvertiseProduct(c echo.Context, id string) error
 	UnadvertiseProduct(c echo.Context, id string) error
+	GetAllProductAdvertisement(desc, page, pageSize int, search, sort string) ([]models.Product, *dto.Pagination, error)
+	GetAllProductAdvertisementByStoreId(id string, desc, page, pageSize int, search, sort string) ([]models.Product, *dto.Pagination, error)
 }
 
 type productService struct {
@@ -46,34 +45,6 @@ func NewProductService() ProductService {
 	}
 }
 
-func (service *productService) UploadImage(c echo.Context) (string, error) {
-	file, err := c.FormFile("file")
-	if err != nil {
-		return "", err
-	}
-
-	src, err := file.Open()
-	if err != nil {
-		return "", err
-	}
-	defer src.Close()
-
-	storeUsername, err := service.storeService.GetStoreUsernameByToken(c)
-	if err != nil {
-		return "", err
-	}
-
-	randomNumber := strconv.Itoa(rand.Intn(1000))
-	fileName := fmt.Sprintf("%s-%s-%s", storeUsername, file.Filename, randomNumber)
-	err = service.uploader.UploadImage(src, fileName)
-	if err != nil {
-		return "", err
-	}
-
-	uploadedImagePath := service.uploader.uploadPath + fileName
-	return uploadedImagePath, nil
-}
-
 func ParseProductForm(c echo.Context) (*dto.ProductRegisterForm, error) {
 	productName := c.FormValue("product_name")
 	productPriceStr := c.FormValue("product_price")
@@ -85,7 +56,7 @@ func ParseProductForm(c echo.Context) (*dto.ProductRegisterForm, error) {
 	productGaramStr := c.FormValue("product_garam")
 	productGrade := c.FormValue("product_grade")
 	productServingSizeStr := c.FormValue("product_servingsize")
-	ptName := c.FormValue("pt_name")
+	ptType := c.FormValue("pt_type")
 
 	productPrice, err := strconv.ParseFloat(productPriceStr, 64)
 	if err != nil {
@@ -116,6 +87,11 @@ func ParseProductForm(c echo.Context) (*dto.ProductRegisterForm, error) {
 		return nil, echo.NewHTTPError(http.StatusBadRequest, "Invalid product serving size")
 	}
 
+	ptTypeInt, err := strconv.ParseInt(ptType, 10, 64)
+	if err != nil {
+		return nil, echo.NewHTTPError(http.StatusBadRequest, "Invalid product type")
+	}
+
 	return &dto.ProductRegisterForm{
 		ProductName:        productName,
 		ProductPrice:       productPrice,
@@ -128,7 +104,7 @@ func ParseProductForm(c echo.Context) (*dto.ProductRegisterForm, error) {
 		ProductGrade:       productGrade,
 		ProductServingSize: productServingSize,
 		ProductExpShow:     "",
-		PT_Name:            ptName,
+		PT_Type:            ptTypeInt,
 	}, nil
 }
 
@@ -138,10 +114,11 @@ func (service *productService) CreateProduct(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	imagePath, err := service.UploadImage(c)
+	imagePath, err := service.uploader.ProcessImageProduct(c)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
+	realImagePath := "https://storage.googleapis.com/capstone-trial-425115/" + imagePath
 
 	UserToken, err := service.tokenRepo.UserToken(middleware.GetToken(c))
 	if err != nil {
@@ -153,7 +130,7 @@ func (service *productService) CreateProduct(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusNotFound, "Store not found")
 	}
 
-	pt_id, err := service.ptService.GetProductTypeIdByName(productForm.PT_Name)
+	pt_id, err := service.ptService.GetProductTypeIdByType(productForm.PT_Type)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusNotFound, "Product type not found")
 	}
@@ -169,7 +146,7 @@ func (service *productService) CreateProduct(c echo.Context) error {
 		PRODUCT_KARBOHIDRAT: productForm.ProductKarbohidrat,
 		PRODUCT_GARAM:       productForm.ProductGaram,
 		PRODUCT_SERVINGSIZE: productForm.ProductServingSize,
-		PRODUCT_PICTURE:     imagePath,
+		PRODUCT_PICTURE:     realImagePath,
 		PRODUCT_GRADING:     productForm.ProductGrade,
 		PRODUCT_EXPSHOW:     time.Now(),
 		CreatedAt:           time.Now(),
@@ -183,7 +160,7 @@ func (service *productService) CreateProduct(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, err)
 	}
 
-	return c.JSON(http.StatusCreated, product)
+	return nil
 }
 
 func (service *productService) GetProductById(id string) (*models.Product, error) {
@@ -235,11 +212,11 @@ func (service *productService) UpdateProduct(c echo.Context, id string) error {
 
 	file, _ := c.FormFile("file")
 	if file != nil {
-		imagePath, err := service.UploadImage(c)
+		imagePath, err := service.uploader.ProcessImageProduct(c)
 		if err != nil {
 			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 		}
-		service.uploader.DeleteImage(product.PRODUCT_PICTURE)
+		service.uploader.DeleteImageProduct(product.PRODUCT_PICTURE)
 		product.PRODUCT_PICTURE = imagePath
 	}
 
@@ -270,8 +247,8 @@ func (service *productService) UpdateProduct(c echo.Context, id string) error {
 	if productForm.ProductServingSize != 0 {
 		product.PRODUCT_SERVINGSIZE = productForm.ProductServingSize
 	}
-	if productForm.PT_Name != "" {
-		pt_id, err := service.ptService.GetProductTypeIdByName(productForm.PT_Name)
+	if productForm.PT_Type != 0 {
+		pt_id, err := service.ptService.GetProductTypeIdByType(productForm.PT_Type)
 		if err != nil {
 			return echo.NewHTTPError(http.StatusNotFound, "Product type not found")
 		}
@@ -288,7 +265,7 @@ func (service *productService) DeleteProduct(id string) error {
 	if err != nil {
 		return err
 	}
-	service.uploader.DeleteImage(product.PRODUCT_PICTURE)
+	service.uploader.DeleteImageProduct(product.PRODUCT_PICTURE)
 	return service.productRepo.DeleteProduct(id)
 }
 
@@ -305,7 +282,7 @@ func (service *productService) AdvertiseProduct(c echo.Context, id string) error
 		return echo.NewHTTPError(http.StatusInternalServerError, "Internal server error")
 	}
 
-	return c.JSON(http.StatusOK, product)
+	return nil
 }
 
 func (service *productService) UnadvertiseProduct(c echo.Context, id string) error {
@@ -320,5 +297,13 @@ func (service *productService) UnadvertiseProduct(c echo.Context, id string) err
 		return echo.NewHTTPError(http.StatusInternalServerError, "Internal server error")
 	}
 
-	return c.JSON(http.StatusOK, product)
+	return nil
+}
+
+func (service *productService) GetAllProductAdvertisement(desc, page, pageSize int, search, sort string) ([]models.Product, *dto.Pagination, error) {
+	return service.productRepo.GetAllProductAdvertisement(desc, page, pageSize, search, sort)
+}
+
+func (service *productService) GetAllProductAdvertisementByStoreId(id string, desc, page, pageSize int, search, sort string) ([]models.Product, *dto.Pagination, error) {
+	return service.productRepo.GetAllProductAdvertisementByStoreId(id, desc, page, pageSize, search, sort)
 }

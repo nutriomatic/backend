@@ -10,6 +10,8 @@ import (
 	"time"
 
 	"cloud.google.com/go/storage"
+	"github.com/google/uuid"
+	"github.com/labstack/echo/v4"
 )
 
 const (
@@ -18,10 +20,10 @@ const (
 )
 
 type ClientUploader struct {
-	cl         *storage.Client
-	projectID  string
-	bucketName string
-	uploadPath string
+	client      *storage.Client
+	bucketName  string
+	productPath string
+	userPath    string
 }
 
 func NewClientUploader() *ClientUploader {
@@ -32,20 +34,40 @@ func NewClientUploader() *ClientUploader {
 	}
 
 	return &ClientUploader{
-		cl:         client,
-		bucketName: bucketName,
-		projectID:  projectID,
-		uploadPath: "productImage/",
+		client:      client,
+		bucketName:  bucketName,
+		productPath: "productImage/",
+		userPath:    "profileImage/",
 	}
 }
 
-func (c *ClientUploader) UploadImage(file multipart.File, object string) error {
-	ctx := context.Background()
-	ctx, cancel := context.WithTimeout(ctx, time.Second*50)
+func (cu *ClientUploader) ProcessImage(c echo.Context, pathPrefix string) (string, error) {
+	file, err := c.FormFile("file")
+	if err != nil {
+		return "", err
+	}
+
+	src, err := file.Open()
+	if err != nil {
+		return "", err
+	}
+	defer src.Close()
+
+	uuid := uuid.New().String()
+	fileName := fmt.Sprintf("%s-%s", pathPrefix, uuid)
+	err = cu.uploadImage(src, pathPrefix+fileName)
+	if err != nil {
+		return "", err
+	}
+
+	return pathPrefix + fileName, nil
+}
+
+func (cu *ClientUploader) uploadImage(file multipart.File, object string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*50)
 	defer cancel()
 
-	// Upload an object with storage.Writer.
-	wc := c.cl.Bucket(c.bucketName).Object(c.uploadPath + object).NewWriter(ctx)
+	wc := cu.client.Bucket(cu.bucketName).Object(object).NewWriter(ctx)
 	if _, err := io.Copy(wc, file); err != nil {
 		return fmt.Errorf("io.Copy: %v", err)
 	}
@@ -56,16 +78,30 @@ func (c *ClientUploader) UploadImage(file multipart.File, object string) error {
 	return nil
 }
 
-func (c *ClientUploader) DeleteImage(object string) error {
-	ctx := context.Background()
-	ctx, cancel := context.WithTimeout(ctx, time.Second*50)
+func (cu *ClientUploader) DeleteImage(pathPrefix, object string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*50)
 	defer cancel()
 
-	// Delete the object from the bucket.
-	o := c.cl.Bucket(c.bucketName).Object(c.uploadPath + object)
+	o := cu.client.Bucket(cu.bucketName).Object(pathPrefix + object)
 	if err := o.Delete(ctx); err != nil {
 		return fmt.Errorf("Object.Delete: %v", err)
 	}
 
 	return nil
+}
+
+func (cu *ClientUploader) ProcessImageUser(c echo.Context) (string, error) {
+	return cu.ProcessImage(c, cu.userPath)
+}
+
+func (cu *ClientUploader) ProcessImageProduct(c echo.Context) (string, error) {
+	return cu.ProcessImage(c, cu.productPath)
+}
+
+func (cu *ClientUploader) DeleteImageProduct(object string) error {
+	return cu.DeleteImage(cu.productPath, object)
+}
+
+func (cu *ClientUploader) DeleteImageUser(object string) error {
+	return cu.DeleteImage(cu.userPath, object)
 }

@@ -97,7 +97,7 @@ func (pc *productController) GetProductByStoreId(c echo.Context) error {
 
 	response := map[string]interface{}{
 		"status":     "success",
-		"product":    products,
+		"products":   products,
 		"pagination": pagination,
 	}
 
@@ -256,5 +256,100 @@ func (pc *productController) UnadvertiseProduct(c echo.Context) error {
 		"status":  "success",
 		"message": "Product unadvertised successfully",
 	}
+	return c.JSON(http.StatusOK, response)
+}
+
+func (pc *productController) GetAllProductAdvertisement(c echo.Context) error {
+	page := 1
+	pageSize := 10
+
+	if qp := c.QueryParam("page"); qp != "" {
+		if p, err := strconv.Atoi(qp); err == nil {
+			page = p
+		}
+	}
+
+	if qp := c.QueryParam("pageSize"); qp != "" {
+		if ps, err := strconv.Atoi(qp); err == nil {
+			pageSize = ps
+		}
+	}
+
+	sort := c.QueryParam("sort")
+	if sort != "" && !dto.IsValidSortField(sort) {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid sort fields"})
+	}
+
+	var desc int
+	if qp := c.QueryParam("desc"); qp != "" {
+		if ds, err := strconv.Atoi(qp); err == nil {
+			desc = ds
+		}
+	}
+
+	var search string
+	if sp := c.QueryParam("search"); sp != "" {
+		search = sp
+	}
+
+	products, pagination, err := pc.ProductService.GetAllProductAdvertisement(desc, page, pageSize, search, sort)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+
+	response := map[string]interface{}{
+		"status":     "success",
+		"products":   products,
+		"pagination": pagination,
+	}
+
+	return c.JSON(http.StatusOK, response)
+}
+
+func (pc *productController) GetAllProductAdvertisementByStoreId(c echo.Context) error {
+	id := c.Param("id")
+	page := 1
+	pageSize := 10
+
+	if qp := c.QueryParam("page"); qp != "" {
+		if p, err := strconv.Atoi(qp); err == nil {
+			page = p
+		}
+	}
+
+	if qp := c.QueryParam("pageSize"); qp != "" {
+		if ps, err := strconv.Atoi(qp); err == nil {
+			pageSize = ps
+		}
+	}
+
+	sort := c.QueryParam("sort")
+	if sort != "" && !dto.IsValidSortField(sort) {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid sort fields"})
+	}
+
+	var desc int
+	if qp := c.QueryParam("desc"); qp != "" {
+		if ds, err := strconv.Atoi(qp); err == nil {
+			desc = ds
+		}
+	}
+
+	var search string
+	if sp := c.QueryParam("search"); sp != "" {
+		search = sp
+	}
+
+	products, pagination, err := pc.ProductService.GetAllProductAdvertisementByStoreId(id, desc, page, pageSize, search, sort)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+
+	response := map[string]interface{}{
+		"status":     "success",
+		"products":   products,
+		"pagination": pagination,
+	}
+
 	return c.JSON(http.StatusOK, response)
 }

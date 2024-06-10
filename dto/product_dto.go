@@ -14,6 +14,6 @@ type ProductRegisterForm struct {
 	ProductGrade       string                `json:"product_grade"`
 	ProductServingSize float64               `json:"product_servingsize"`
 	ProductExpShow     string                `json:"product_expshow"`
-	PT_Name            string                `json:"pt_name"`
+	PT_Type            int64                 `json:"pt_type"`
 	File               *multipart.FileHeader `json:"-"`
 }

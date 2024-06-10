@@ -7,5 +7,5 @@ import (
 
 func main() {
 	router := router.NewRouter()
-	log.Fatalln(router.Start(":" + "8000"))
+	log.Fatalln(router.Start(":" + "8080"))
 }

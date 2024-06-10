@@ -16,7 +16,7 @@ type UserRepository interface {
 	GetUserByUsername(username string) (*models.User, error)
 	GetUserByEmail(email string) (*models.User, error)
 	GetUserWithoutPassword(id string) (*models.User, error)
-	UpdateUser(user *models.User) (*dto.UserResponseToken, error)
+	UpdateUser(user *models.User) error
 	DeleteUser(id string) error
 	FindAll(page, pageSize int, search, sort string) ([]models.User, *dto.Pagination, error)
 	Logout(token string) error
@@ -83,45 +83,8 @@ func (repo *UserRepositoryGORM) GetUserWithoutPassword(id string) (*models.User,
 	return &user, nil
 }
 
-func (repo *UserRepositoryGORM) UpdateUser(user *models.User) (*dto.UserResponseToken, error) {
-	err := repo.db.Save(user).Error
-	if err != nil {
-		return nil, err
-	}
-
-	al, err := NewActivityLevelRepositoryGORM().GetActivityLevelById(user.AL_ID)
-	if err != nil {
-		return nil, err
-	}
-
-	hg, err := NewHealthGoalRepositoryGORM().GetById(user.HG_ID)
-	if err != nil {
-		return nil, err
-	}
-
-	response := &dto.UserResponseToken{
-		Id:   user.ID,
-		Name: user.Name,
-		// Username:   user.Username,
-		Email:      user.Email,
-		Role:       user.Role,
-		Gender:     user.Gender,
-		Telp:       user.Telp,
-		Profpic:    user.Profpic,
-		Birthdate:  user.Birthdate,
-		Place:      user.Place,
-		Height:     user.Height,
-		Weight:     user.Weight,
-		WeightGoal: user.WeightGoal,
-		HG_ID:      user.HG_ID,
-		HG_TYPE:    hg.HG_TYPE,
-		HG_DESC:    hg.HG_DESC,
-		AL_ID:      user.AL_ID,
-		AL_TYPE:    al.AL_TYPE,
-		AL_DESC:    al.AL_DESC,
-		AL_VALUE:   al.AL_VALUE,
-	}
-	return response, nil
+func (repo *UserRepositoryGORM) UpdateUser(user *models.User) error {
+	return repo.db.Save(user).Error
 }
 
 func (repo *UserRepositoryGORM) DeleteUser(id string) error {

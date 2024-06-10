@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"golang-template/dto"
 	"golang-template/services"
 	"net/http"
 
@@ -32,41 +33,40 @@ func (u *userController) GetUserByToken(c echo.Context) error {
 	}
 }
 
-// func (u *userController) UpdateUser(c echo.Context) error {
-// 	updateForm := &dto.RegisterForm{}
-// 	err := c.Bind(updateForm)
-// 	if err != nil {
-// 		response := map[string]interface{}{
-// 			"status":  "error",
-// 			"message": "All user fields must be provided!",
-// 		}
-// 		return c.JSON(http.StatusBadRequest, response)
-// 	}
+func (u *userController) UpdateUser(c echo.Context) error {
+	updateForm := &dto.RegisterForm{}
+	err := c.Bind(updateForm)
+	if err != nil {
+		response := map[string]interface{}{
+			"status":  "error",
+			"message": "All user fields must be provided!",
+		}
+		return c.JSON(http.StatusBadRequest, response)
+	}
 
-// 	updatedUser, err := u.UserService.UpdateUser(updateForm, c)
-// 	if err != nil {
-// 		httpError, ok := err.(*echo.HTTPError)
-// 		if ok {
-// 			response := map[string]interface{}{
-// 				"status":  "error",
-// 				"message": httpError.Message,
-// 			}
-// 			return c.JSON(httpError.Code, response)
-// 		}
-// 		response := map[string]interface{}{
-// 			"status":  "error",
-// 			"message": "internal server error",
-// 		}
-// 		return c.JSON(http.StatusInternalServerError, response)
-// 	}
+	err = u.UserService.UpdateUser(updateForm, c)
+	if err != nil {
+		httpError, ok := err.(*echo.HTTPError)
+		if ok {
+			response := map[string]interface{}{
+				"status":  "error",
+				"message": httpError.Message,
+			}
+			return c.JSON(httpError.Code, response)
+		}
+		response := map[string]interface{}{
+			"status":  "error",
+			"message": "internal server error",
+		}
+		return c.JSON(http.StatusInternalServerError, response)
+	}
 
-// 	response := map[string]interface{}{
-// 		"status":  "success",
-// 		"message": "user updated",
-// 		"user":    updatedUser,
-// 	}
-// 	return c.JSON(http.StatusOK, response)
-// }
+	response := map[string]interface{}{
+		"status":  "success",
+		"message": "user updated",
+	}
+	return c.JSON(http.StatusOK, response)
+}
 
 func (u *userController) DeleteUser(c echo.Context) error {
 	err := u.UserService.DeleteUser(c)
