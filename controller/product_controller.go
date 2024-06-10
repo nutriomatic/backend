@@ -31,10 +31,16 @@ func (pc *productController) CreateProduct(c echo.Context) error {
 
 	err = pc.ProductService.CreateProduct(c)
 	if err != nil {
-		return echo.NewHTTPError(400, err.Error())
+		response := map[string]interface{}{
+			"code":    http.StatusInternalServerError,
+			"status":  "failed",
+			"message": err.Error(),
+		}
+		return c.JSON(http.StatusInternalServerError, response)
 	}
 
 	response := map[string]interface{}{
+		"code":    http.StatusOK,
 		"status":  "success",
 		"message": "Product created successfully",
 	}
@@ -45,10 +51,16 @@ func (pc *productController) GetProductById(c echo.Context) error {
 	id := c.Param("id")
 	product, err := pc.ProductService.GetProductById(id)
 	if err != nil {
-		return echo.NewHTTPError(400, err.Error())
+		response := map[string]interface{}{
+			"code":    http.StatusInternalServerError,
+			"status":  "failed",
+			"message": err.Error(),
+		}
+		return c.JSON(http.StatusInternalServerError, response)
 	}
 
 	response := map[string]interface{}{
+		"code":    http.StatusOK,
 		"status":  "success",
 		"product": product,
 	}
@@ -92,10 +104,17 @@ func (pc *productController) GetProductByStoreId(c echo.Context) error {
 
 	products, pagination, err := pc.ProductService.GetProductByStoreId(id, desc, page, pageSize, search, sort)
 	if err != nil {
-		return echo.NewHTTPError(400, err.Error())
+		response := map[string]interface{}{
+			"code":       http.StatusInternalServerError,
+			"status":     "failed",
+			"message":    err.Error(),
+			"pagination": pagination,
+		}
+		return c.JSON(http.StatusInternalServerError, response)
 	}
 
 	response := map[string]interface{}{
+		"code":       http.StatusOK,
 		"status":     "success",
 		"products":   products,
 		"pagination": pagination,
@@ -139,7 +158,12 @@ func (pc *productController) GetAllProduct(c echo.Context) error {
 
 	products, pagination, err := pc.ProductService.GetAllProduct(desc, page, pageSize, search, sort)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		response := map[string]interface{}{
+			"code":    http.StatusInternalServerError,
+			"status":  "failed",
+			"message": err.Error(),
+		}
+		return c.JSON(http.StatusInternalServerError, response)
 	}
 
 	response := map[string]interface{}{
@@ -156,6 +180,7 @@ func (pc *productController) UpdateProduct(c echo.Context) error {
 	err := pc.ProductService.CheckProductStore(id, c)
 	if err != nil {
 		response := map[string]interface{}{
+			"code":    http.StatusForbidden,
 			"status":  "failed",
 			"message": "unauthorized",
 		}
@@ -165,6 +190,7 @@ func (pc *productController) UpdateProduct(c echo.Context) error {
 	err = pc.ProductService.UpdateProduct(c, id)
 	if err != nil {
 		response := map[string]interface{}{
+			"code":    http.StatusInternalServerError,
 			"status":  "failed",
 			"message": err.Error(),
 		}
@@ -172,6 +198,7 @@ func (pc *productController) UpdateProduct(c echo.Context) error {
 	}
 
 	response := map[string]interface{}{
+		"code":    http.StatusOK,
 		"status":  "success",
 		"message": "Product updated successfully",
 	}
@@ -183,6 +210,7 @@ func (pc *productController) DeleteProduct(c echo.Context) error {
 	err := pc.ProductService.CheckProductStore(id, c)
 	if err != nil {
 		response := map[string]interface{}{
+			"code":    http.StatusForbidden,
 			"status":  "failed",
 			"message": "unauthorized",
 		}
@@ -192,6 +220,7 @@ func (pc *productController) DeleteProduct(c echo.Context) error {
 	err = pc.ProductService.DeleteProduct(id)
 	if err != nil {
 		response := map[string]interface{}{
+			"code":    http.StatusInternalServerError,
 			"status":  "failed",
 			"message": err.Error(),
 		}
@@ -199,6 +228,7 @@ func (pc *productController) DeleteProduct(c echo.Context) error {
 	}
 
 	response := map[string]interface{}{
+		"code":    http.StatusOK,
 		"status":  "success",
 		"message": "Product deleted successfully",
 	}
@@ -210,6 +240,7 @@ func (pc *productController) AdvertiseProduct(c echo.Context) error {
 	err := pc.ProductService.CheckProductStore(id, c)
 	if err != nil {
 		response := map[string]interface{}{
+			"code":    http.StatusForbidden,
 			"status":  "failed",
 			"message": "unauthorized",
 		}
@@ -219,6 +250,7 @@ func (pc *productController) AdvertiseProduct(c echo.Context) error {
 	err = pc.ProductService.AdvertiseProduct(c, id)
 	if err != nil {
 		response := map[string]interface{}{
+			"code":    http.StatusInternalServerError,
 			"status":  "failed",
 			"message": err.Error(),
 		}
@@ -226,6 +258,7 @@ func (pc *productController) AdvertiseProduct(c echo.Context) error {
 	}
 
 	response := map[string]interface{}{
+		"code":    http.StatusOK,
 		"status":  "success",
 		"message": "Product advertised successfully",
 	}
@@ -237,6 +270,7 @@ func (pc *productController) UnadvertiseProduct(c echo.Context) error {
 	err := pc.ProductService.CheckProductStore(id, c)
 	if err != nil {
 		response := map[string]interface{}{
+			"code":    http.StatusForbidden,
 			"status":  "failed",
 			"message": "unauthorized",
 		}
@@ -246,6 +280,7 @@ func (pc *productController) UnadvertiseProduct(c echo.Context) error {
 	err = pc.ProductService.UnadvertiseProduct(c, id)
 	if err != nil {
 		response := map[string]interface{}{
+			"code":    http.StatusInternalServerError,
 			"status":  "failed",
 			"message": err.Error(),
 		}
@@ -253,6 +288,7 @@ func (pc *productController) UnadvertiseProduct(c echo.Context) error {
 	}
 
 	response := map[string]interface{}{
+		"code":    http.StatusOK,
 		"status":  "success",
 		"message": "Product unadvertised successfully",
 	}
@@ -294,10 +330,16 @@ func (pc *productController) GetAllProductAdvertisement(c echo.Context) error {
 
 	products, pagination, err := pc.ProductService.GetAllProductAdvertisement(desc, page, pageSize, search, sort)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		response := map[string]interface{}{
+			"code":    http.StatusInternalServerError,
+			"status":  "failed",
+			"message": err.Error(),
+		}
+		return c.JSON(http.StatusInternalServerError, response)
 	}
 
 	response := map[string]interface{}{
+		"code":       http.StatusOK,
 		"status":     "success",
 		"products":   products,
 		"pagination": pagination,
@@ -342,10 +384,16 @@ func (pc *productController) GetAllProductAdvertisementByStoreId(c echo.Context)
 
 	products, pagination, err := pc.ProductService.GetAllProductAdvertisementByStoreId(id, desc, page, pageSize, search, sort)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		response := map[string]interface{}{
+			"code":    http.StatusInternalServerError,
+			"status":  "failed",
+			"message": err.Error(),
+		}
+		return c.JSON(http.StatusInternalServerError, response)
 	}
 
 	response := map[string]interface{}{
+		"code":       http.StatusOK,
 		"status":     "success",
 		"products":   products,
 		"pagination": pagination,

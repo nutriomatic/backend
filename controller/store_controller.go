@@ -30,6 +30,7 @@ func (s *storeController) CreateStore(c echo.Context) error {
 		err := c.Bind(StoreForm)
 		if err != nil {
 			response := map[string]interface{}{
+				"code":    http.StatusBadRequest,
 				"status":  "error",
 				"message": "All store fields must be provided!",
 			}
@@ -41,12 +42,14 @@ func (s *storeController) CreateStore(c echo.Context) error {
 			httpError, ok := err.(*echo.HTTPError)
 			if ok {
 				response := map[string]interface{}{
+					"code":    httpError.Code,
 					"status":  "error",
 					"message": httpError.Message,
 				}
 				return c.JSON(httpError.Code, response)
 			}
 			response := map[string]interface{}{
+				"code":    http.StatusInternalServerError,
 				"status":  "error",
 				"message": "internal server error",
 			}
@@ -55,6 +58,7 @@ func (s *storeController) CreateStore(c echo.Context) error {
 
 		if isStore != nil {
 			response := map[string]interface{}{
+				"code":    http.StatusBadRequest,
 				"status":  "error",
 				"message": "store already exists",
 			}
@@ -66,12 +70,14 @@ func (s *storeController) CreateStore(c echo.Context) error {
 			httpError, ok := err.(*echo.HTTPError)
 			if ok {
 				response := map[string]interface{}{
+					"code":    httpError.Code,
 					"status":  "error",
 					"message": httpError.Message,
 				}
 				return c.JSON(httpError.Code, response)
 			}
 			response := map[string]interface{}{
+				"code":    http.StatusInternalServerError,
 				"status":  "error",
 				"message": "internal server error",
 			}
@@ -79,6 +85,7 @@ func (s *storeController) CreateStore(c echo.Context) error {
 		}
 
 		response := map[string]interface{}{
+			"code":    http.StatusOK,
 			"status":  "success",
 			"message": "store registration was successful",
 		}
@@ -96,18 +103,25 @@ func (s *storeController) GetStoreByUserId(c echo.Context) error {
 			httpError, ok := err.(*echo.HTTPError)
 			if ok {
 				response := map[string]interface{}{
+					"code":    httpError.Code,
 					"status":  "error",
 					"message": httpError.Message,
 				}
 				return c.JSON(httpError.Code, response)
 			}
 			response := map[string]interface{}{
+				"code":    http.StatusInternalServerError,
 				"status":  "error",
 				"message": "internal server error",
 			}
 			return c.JSON(http.StatusInternalServerError, response)
 		}
-		return c.JSON(http.StatusOK, store)
+		response := map[string]interface{}{
+			"code":   http.StatusOK,
+			"status": "success",
+			"store":  store,
+		}
+		return c.JSON(http.StatusOK, response)
 	}
 }
 
@@ -116,6 +130,7 @@ func (s *storeController) UpdateStore(c echo.Context) error {
 	err := c.Bind(updateForm)
 	if err != nil {
 		response := map[string]interface{}{
+			"code":    http.StatusBadRequest,
 			"status":  "error",
 			"message": "All user fields must be provided!",
 		}
@@ -127,12 +142,14 @@ func (s *storeController) UpdateStore(c echo.Context) error {
 		httpError, ok := err.(*echo.HTTPError)
 		if ok {
 			response := map[string]interface{}{
+				"code":    httpError.Code,
 				"status":  "error",
 				"message": httpError.Message,
 			}
 			return c.JSON(httpError.Code, response)
 		}
 		response := map[string]interface{}{
+			"code":    http.StatusInternalServerError,
 			"status":  "error",
 			"message": "internal server error",
 		}
@@ -140,6 +157,7 @@ func (s *storeController) UpdateStore(c echo.Context) error {
 	}
 
 	response := map[string]interface{}{
+		"code":    http.StatusOK,
 		"status":  "success",
 		"message": "successfully updated store",
 	}
@@ -149,10 +167,16 @@ func (s *storeController) UpdateStore(c echo.Context) error {
 func (s *storeController) DeleteStore(c echo.Context) error {
 	err := s.StoreService.DeleteStore(c)
 	if err != nil {
-		return c.String(http.StatusInternalServerError, "error in removing store")
+		response := map[string]interface{}{
+			"code":    http.StatusInternalServerError,
+			"status":  "error",
+			"message": "error in removing store",
+		}
+		return c.JSON(http.StatusInternalServerError, response)
 	}
 
 	response := map[string]interface{}{
+		"code":    http.StatusOK,
 		"status":  "success",
 		"message": "store removed successfully",
 	}
@@ -194,7 +218,12 @@ func (s *storeController) GetAllStores(c echo.Context) error {
 
 	stores, pagination, err := s.StoreService.GetAll(desc, page, pageSize, search, sort)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		response := map[string]interface{}{
+			"code":    http.StatusInternalServerError,
+			"status":  "error",
+			"message": "error in fetching stores",
+		}
+		return c.JSON(http.StatusInternalServerError, response)
 	}
 
 	response := map[string]interface{}{

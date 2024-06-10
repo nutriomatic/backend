@@ -26,6 +26,7 @@ func (u *userController) GetUserByToken(c echo.Context) error {
 		return echo.ErrUnauthorized
 	} else {
 		response := map[string]interface{}{
+			"code":   http.StatusOK,
 			"status": "success",
 			"user":   user,
 		}
@@ -38,6 +39,7 @@ func (u *userController) UpdateUser(c echo.Context) error {
 	err := c.Bind(updateForm)
 	if err != nil {
 		response := map[string]interface{}{
+			"code":    http.StatusBadRequest,
 			"status":  "error",
 			"message": "All user fields must be provided!",
 		}
@@ -49,12 +51,14 @@ func (u *userController) UpdateUser(c echo.Context) error {
 		httpError, ok := err.(*echo.HTTPError)
 		if ok {
 			response := map[string]interface{}{
+				"code":    httpError.Code,
 				"status":  "error",
 				"message": httpError.Message,
 			}
 			return c.JSON(httpError.Code, response)
 		}
 		response := map[string]interface{}{
+			"code":    http.StatusInternalServerError,
 			"status":  "error",
 			"message": "internal server error",
 		}
@@ -62,6 +66,7 @@ func (u *userController) UpdateUser(c echo.Context) error {
 	}
 
 	response := map[string]interface{}{
+		"code":    http.StatusOK,
 		"status":  "success",
 		"message": "user updated",
 	}
@@ -75,6 +80,7 @@ func (u *userController) DeleteUser(c echo.Context) error {
 	}
 
 	response := map[string]interface{}{
+		"code":    http.StatusOK,
 		"status":  "success",
 		"message": "account removed successfully",
 	}
@@ -87,6 +93,7 @@ func (u *userController) Logout(c echo.Context) error {
 		return err
 	} else {
 		response := map[string]interface{}{
+			"code":    http.StatusOK,
 			"status":  "success",
 			"message": "Logout was successful",
 		}

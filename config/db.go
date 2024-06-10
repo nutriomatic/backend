@@ -6,6 +6,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 	"github.com/sirupsen/logrus"
 	"gorm.io/driver/mysql"
@@ -16,10 +17,10 @@ import (
 )
 
 func InitDB() *gorm.DB {
-	// err := godotenv.Load(".env")
-	// if err != nil {
-	// 	logrus.Error("Error loading env file:", err)
-	// }
+	err := godotenv.Load(".env")
+	if err != nil {
+		logrus.Error("Error loading env file:", err)
+	}
 
 	dbUser := os.Getenv("DB_USER")
 	dbPassword := os.Getenv("DB_PASS")

@@ -35,22 +35,16 @@ func (a *authController) Register(c echo.Context) error {
 	err := c.Bind(registerReq)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{
+			"code":    "400",
 			"status":  "failed",
 			"message": dto.FieldsRequired,
 		})
 	}
 
-	// _, err = a.userService.GetUserByUsername(registerReq.Username)
-	// if err == nil {
-	// 	return c.JSON(http.StatusBadRequest, map[string]string{
-	// 		"status":  "failed",
-	// 		"message": dto.UsernameExists,
-	// 	})
-	// }
-
 	_, err = a.userService.GetUserByEmail(registerReq.Email)
 	if err == nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{
+			"code":    "400",
 			"status":  "failed",
 			"message": dto.EmailExists,
 		})
@@ -58,6 +52,7 @@ func (a *authController) Register(c echo.Context) error {
 
 	if !utils.ValidateLengthPassword(registerReq.Password) {
 		return c.JSON(http.StatusBadRequest, map[string]string{
+			"code":    "400",
 			"status":  "failed",
 			"message": dto.PasswordShort,
 		})
@@ -66,12 +61,14 @@ func (a *authController) Register(c echo.Context) error {
 	err = a.userService.CreateUser(registerReq)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"code":    "500",
 			"status":  "failed",
 			"message": "Error creating user.",
 		})
 	}
 
 	return c.JSON(http.StatusCreated, map[string]string{
+		"code":    "201",
 		"status":  "success",
 		"message": dto.Register_Successful,
 	})
@@ -81,19 +78,19 @@ func (a *authController) Login(c echo.Context) error {
 	loginReq := &dto.LoginForm{}
 	err := c.Bind(loginReq)
 	if err != nil {
-		return c.String(http.StatusBadRequest, "Invalid login form.")
+		response := map[string]interface{}{
+			"code":    http.StatusBadRequest,
+			"status":  "error",
+			"message": dto.FieldsRequired,
+		}
+		return c.JSON(http.StatusBadRequest, response)
 	}
 
 	var user *models.User
 	user, err = a.userService.GetUserByEmail(loginReq.Email)
-	// if loginReq.Username == "" {
-	// 	user, err = a.userService.GetUserByEmail(loginReq.Email)
-	// }
-	// else {
-	// 	user, err = a.userService.GetUserByUsername(loginReq.Username)
-	// }
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"code":    "500",
 			"status":  "failed",
 			"message": dto.ErrorRetrievingUser,
 		})
@@ -101,6 +98,7 @@ func (a *authController) Login(c echo.Context) error {
 
 	if user == nil {
 		return c.JSON(http.StatusUnauthorized, map[string]string{
+			"code":    "401",
 			"status":  "failed",
 			"message": dto.UserNotFound,
 		})
@@ -110,6 +108,7 @@ func (a *authController) Login(c echo.Context) error {
 		token, err := middleware.GenerateTokenPair(user)
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, map[string]string{
+				"code":    "500",
 				"status":  "failed",
 				"message": dto.ErrorGeneratingToken,
 			})
@@ -117,6 +116,7 @@ func (a *authController) Login(c echo.Context) error {
 		err = a.tokenService.SaveToken(user, token)
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, map[string]string{
+				"code":    "500",
 				"status":  "failed",
 				"message": dto.ErrorSavingToken,
 			})
@@ -130,6 +130,7 @@ func (a *authController) Login(c echo.Context) error {
 		}
 
 		return c.JSON(http.StatusOK, map[string]string{
+			"code":    "200",
 			"status":  "success",
 			"message": loginmessage,
 			"token":   token,

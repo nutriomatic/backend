@@ -23,6 +23,7 @@ func NewProductTypeController() *ProductTypeController {
 func (pt *ProductTypeController) CreateProductType(c echo.Context) error {
 	if !pt.TokenService.IsAdmin(c) {
 		response := map[string]interface{}{
+			"code":    http.StatusUnauthorized,
 			"status":  "failed",
 			"message": "Unauthorized access",
 		}
@@ -34,6 +35,7 @@ func (pt *ProductTypeController) CreateProductType(c echo.Context) error {
 	err := c.Bind(PTForm)
 	if err != nil {
 		response := map[string]interface{}{
+			"code":    http.StatusBadRequest,
 			"status":  "error",
 			"message": "All product type fields must be provided!",
 		}
@@ -45,12 +47,14 @@ func (pt *ProductTypeController) CreateProductType(c echo.Context) error {
 		httpError, ok := err.(*echo.HTTPError)
 		if ok {
 			response := map[string]interface{}{
+				"code":    httpError.Code,
 				"status":  "error",
 				"message": httpError.Message,
 			}
 			return c.JSON(httpError.Code, response)
 		}
 		response := map[string]interface{}{
+			"code":    http.StatusInternalServerError,
 			"status":  "error",
 			"message": "internal server error",
 		}
@@ -58,6 +62,7 @@ func (pt *ProductTypeController) CreateProductType(c echo.Context) error {
 	}
 
 	response := map[string]interface{}{
+		"code":    http.StatusCreated,
 		"status":  "success",
 		"message": "Product Type created successfully",
 	}
@@ -67,6 +72,7 @@ func (pt *ProductTypeController) CreateProductType(c echo.Context) error {
 func (pt *ProductTypeController) GetAllProductType(c echo.Context) error {
 	if !pt.TokenService.IsAdmin(c) {
 		response := map[string]interface{}{
+			"code":    http.StatusUnauthorized,
 			"status":  "failed",
 			"message": "Unauthorized access",
 		}
@@ -79,12 +85,14 @@ func (pt *ProductTypeController) GetAllProductType(c echo.Context) error {
 		httpError, ok := err.(*echo.HTTPError)
 		if ok {
 			response := map[string]interface{}{
+				"code":    httpError.Code,
 				"status":  "error",
 				"message": httpError.Message,
 			}
 			return c.JSON(httpError.Code, response)
 		}
 		response := map[string]interface{}{
+			"code":    http.StatusInternalServerError,
 			"status":  "error",
 			"message": "internal server error",
 		}
@@ -92,6 +100,7 @@ func (pt *ProductTypeController) GetAllProductType(c echo.Context) error {
 	}
 
 	response := map[string]interface{}{
+		"code":   http.StatusOK,
 		"status": "success",
 		"data":   productTypes,
 	}
@@ -101,6 +110,7 @@ func (pt *ProductTypeController) GetAllProductType(c echo.Context) error {
 func (pt *ProductTypeController) GetProductTypeById(c echo.Context) error {
 	if !pt.TokenService.IsAdmin(c) {
 		response := map[string]interface{}{
+			"code":    http.StatusUnauthorized,
 			"status":  "failed",
 			"message": "Unauthorized access",
 		}
@@ -114,12 +124,14 @@ func (pt *ProductTypeController) GetProductTypeById(c echo.Context) error {
 		httpError, ok := err.(*echo.HTTPError)
 		if ok {
 			response := map[string]interface{}{
+				"code":    httpError.Code,
 				"status":  "error",
 				"message": httpError.Message,
 			}
 			return c.JSON(httpError.Code, response)
 		}
 		response := map[string]interface{}{
+			"code":    http.StatusInternalServerError,
 			"status":  "error",
 			"message": "internal server error",
 		}
@@ -127,7 +139,7 @@ func (pt *ProductTypeController) GetProductTypeById(c echo.Context) error {
 	}
 
 	response := map[string]interface{}{
-
+		"code":   http.StatusOK,
 		"status": "success",
 		"data":   productType,
 	}
@@ -138,6 +150,7 @@ func (pt *ProductTypeController) GetProductTypeById(c echo.Context) error {
 func (pt *ProductTypeController) DeleteProductType(c echo.Context) error {
 	if !pt.TokenService.IsAdmin(c) {
 		response := map[string]interface{}{
+			"code":    http.StatusUnauthorized,
 			"status":  "failed",
 			"message": "Unauthorized access",
 		}
@@ -151,12 +164,14 @@ func (pt *ProductTypeController) DeleteProductType(c echo.Context) error {
 		httpError, ok := err.(*echo.HTTPError)
 		if ok {
 			response := map[string]interface{}{
+				"code":    httpError.Code,
 				"status":  "error",
 				"message": httpError.Message,
 			}
 			return c.JSON(httpError.Code, response)
 		}
 		response := map[string]interface{}{
+			"code":    http.StatusInternalServerError,
 			"status":  "error",
 			"message": "internal server error",
 		}
@@ -164,6 +179,7 @@ func (pt *ProductTypeController) DeleteProductType(c echo.Context) error {
 	}
 
 	response := map[string]interface{}{
+		"code":    http.StatusOK,
 		"status":  "success",
 		"message": "Product Type deletion was successful",
 	}
