@@ -118,7 +118,7 @@ func (service *productService) CreateProduct(c echo.Context) error {
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
-	realImagePath := "https://storage.googleapis.com/capstone-trial-425115/" + imagePath
+	realImagePath := "https://storage.googleapis.com/nutrio-storage/" + imagePath
 
 	UserToken, err := service.tokenRepo.UserToken(middleware.GetToken(c))
 	if err != nil {

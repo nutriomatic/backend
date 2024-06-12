@@ -1,108 +1,115 @@
-SET FOREIGN_KEY_CHECKS = 0;
-
-DROP TABLE IF EXISTS users;
-DROP TABLE IF EXISTS activity_levels;
-DROP TABLE IF EXISTS health_goals;
-
-SET FOREIGN_KEY_CHECKS = 1;
-
--- Create the activity_levels table
-CREATE TABLE IF NOT EXISTS activity_levels (
-    al_id VARCHAR(36) PRIMARY KEY,
-    al_type BIGINT NOT NULL,
-    al_desc VARCHAR(255) NOT NULL,
-    al_value FLOAT NOT NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+CREATE TABLE `activity_levels` (
+  `al_id` varchar(36),
+  `al_type` bigint DEFAULT NULL,
+  `al_desc` longtext DEFAULT NULL,
+  `al_value` double DEFAULT NULL,
+  `created_at` datetime(3) DEFAULT NULL,
+  `updated_at` datetime(3) DEFAULT NULL,
+  PRIMARY KEY (`al_id`)
 );
 
--- Create the health_goals table
-CREATE TABLE IF NOT EXISTS health_goals (
-    hg_id VARCHAR(36) PRIMARY KEY,
-    hg_type BIGINT NOT NULL,
-    hg_desc VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+CREATE TABLE `health_goals` (
+  `hg_id` varchar(36),
+  `hg_type` bigint,
+  `hg_desc` longtext,
+  `created_at` datetime(3) DEFAULT NULL,
+  `updated_at` datetime(3) DEFAULT NULL,
+  PRIMARY KEY (`hg_id`)
 );
 
--- Create the users table
-CREATE TABLE IF NOT EXISTS users (
-    id VARCHAR(36) PRIMARY KEY,
-    username VARCHAR(255) UNIQUE NOT NULL,
-    name VARCHAR(255) NOT NULL,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    password VARCHAR(255) NOT NULL,
-    role VARCHAR(255) NOT NULL,
-    gender BIGINT NOT NULL,
-    telp VARCHAR(255) NOT NULL,
-    profpic VARCHAR(255) NOT NULL,
-    birthdate DATE NOT NULL,
-    place VARCHAR(255) NOT NULL,
-    height FLOAT NOT NULL,
-    weight FLOAT NOT NULL,
-    weight_goal FLOAT NOT NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    hg_id VARCHAR(36),
-    al_id VARCHAR(36)
+CREATE TABLE `nutrition_info` (
+  `ni_id` varchar(36),
+  `ni_type` varchar(255) DEFAULT NULL,
+  `ni_text` varchar(500) DEFAULT NULL,
+  `created_at` datetime(3) DEFAULT NULL,
+  `updated_at` datetime(3) DEFAULT NULL,
+  PRIMARY KEY (`ni_id`)
 );
 
-DROP TABLE IF EXISTS tokens;
-
-CREATE TABLE tokens (
-    id VARCHAR(36) PRIMARY KEY,
-    userId VARCHAR(36) NOT NULL,
-    token VARCHAR(255) UNIQUE NOT NULL,
-    expires_at DATETIME NOT NULL,
-    created_at DATETIME NOT NULL,
-    updated_at DATETIME NOT NULL,
-    deleted_at DATETIME NULL,
-    INDEX idx_tokens_deleted_at (deleted_at),
-    CONSTRAINT fk_tokens_user FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
+CREATE TABLE `product_types` (
+  `pt_id` varchar(36) NOT NULL,
+  `pt_name` longtext DEFAULT NULL,
+  `pt_type` bigint DEFAULT NULL,
+  `created_at` datetime(3) DEFAULT NULL,
+  `updated_at` datetime(3) DEFAULT NULL,
+  PRIMARY KEY (`pt_id`)
 );
 
-DESCRIBE tokens;
-
-CREATE TABLE Stores (
-    STORE_ID VARCHAR(255) PRIMARY KEY,
-    STORE_NAME VARCHAR(255) NOT NULL,
-    STORE_USERNAME VARCHAR(255) NOT NULL,
-    STORE_ADDRESS VARCHAR(255) NOT NULL,
-    STORE_CONTACT VARCHAR(255) NOT NULL,
-    CreatedAt TIMESTAMP NOT NULL,
-    UpdatedAt TIMESTAMP NOT NULL,
-    USER_ID VARCHAR(255),
-    FOREIGN KEY (USER_ID) REFERENCES Users(ID)
+CREATE TABLE `products` (
+  `product_id` varchar(36) NOT NULL,
+  `product_name` varchar(255) DEFAULT NULL,
+  `product_price` decimal(10,2) DEFAULT NULL,
+  `product_desc` text,
+  `product_isshow` tinyint(1) DEFAULT NULL,
+  `product_lemaktotal` decimal(10,2) DEFAULT NULL,
+  `product_protein` decimal(10,2) DEFAULT NULL,
+  `product_karbohidrat` decimal(10,2) DEFAULT NULL,
+  `product_garam` decimal(10,2) DEFAULT NULL,
+  `product_servingsize` decimal(10,2) DEFAULT NULL,
+  `product_picture` varchar(255) DEFAULT NULL,
+  `product_expshow` timestamp NULL DEFAULT NULL,
+  `createdat` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updatedat` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `store_id` varchar(36) DEFAULT NULL,
+  `pt_id` varchar(36) DEFAULT NULL,
+  `product_grade` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+  PRIMARY KEY (`product_id`),
+  KEY `store_id` (`store_id`),
+  KEY `pt_id` (`pt_id`),
+  CONSTRAINT `products_ibfk_1` FOREIGN KEY (`store_id`) REFERENCES `stores` (`store_id`),
+  CONSTRAINT `products_ibfk_2` FOREIGN KEY (`pt_id`) REFERENCES `product_types` (`pt_id`)
 );
 
--- Add foreign key constraints
-ALTER TABLE users
-ADD CONSTRAINT FK_users_health_goals
-FOREIGN KEY (hg_id) REFERENCES health_goals(hg_id);
+CREATE TABLE `stores` (
+  `store_id` varchar(36),
+  `store_name` longtext,
+  `store_username` longtext,
+  `store_address` longtext,
+  `store_contact` longtext,
+  `created_at` datetime(3),
+  `updated_at` datetime(3),
+  `user_id` varchar(36) DEFAULT NULL,
+  PRIMARY KEY (`store_id`),
+  KEY `fk_stores_user` (`user_id`),
+  CONSTRAINT `fk_stores_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+); 
 
-ALTER TABLE users
-DROP FOREIGN KEY FK_users_activitylevel;
+CREATE TABLE `users` (
+  `id` varchar(36) NOT NULL,
+  `username` varchar(191) DEFAULT NULL,
+  `name` longtext DEFAULT NULL,
+  `email` varchar(191) DEFAULT NULL,
+  `password` longtext DEFAULT NULL,
+  `role` longtext DEFAULT NULL,
+  `gender` bigint DEFAULT NULL,
+  `telp` longtext DEFAULT NULL,
+  `profpic` longtext DEFAULT NULL,
+  `birthdate` longtext DEFAULT NULL,
+  `place` longtext DEFAULT NULL,
+  `height` double DEFAULT NULL,
+  `weight` double DEFAULT NULL,
+  `weight_goal` double DEFAULT NULL,
+  `created_at` datetime(3) DEFAULT NULL,
+  `updated_at` datetime(3) DEFAULT NULL,
+  `hg_id` varchar(36) DEFAULT NULL,
+  `al_id` varchar(36) DEFAULT NULL,
+  `calories` double DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uni_users_email` (`email`),
+  KEY `FK_users_health_goals` (`hg_id`),
+  KEY `FK_users_activity_levels` (`al_id`),
+  CONSTRAINT `FK_users_activity_levels` FOREIGN KEY (`al_id`) REFERENCES `activity_levels` (`al_id`),
+  CONSTRAINT `FK_users_health_goals` FOREIGN KEY (`hg_id`) REFERENCES `health_goals` (`hg_id`)
+);
 
-ALTER TABLE users
-DROP FOREIGN KEY FK_users_health_goals;
-
-ALTER TABLE users
-ADD CONSTRAINT FK_users_activity_levels
-FOREIGN KEY (al_id) REFERENCES activity_levels(al_id);
-
-SELECT constraint_name, table_name, constraint_type
-FROM information_schema.table_constraints
-WHERE table_schema = 'nutriomatic'
-ORDER BY table_name, constraint_type;
-
-SELECT CONCAT('ALTER TABLE ', table_name, ' DROP FOREIGN KEY ', constraint_name, ';') AS sql_command
-FROM information_schema.table_constraints
-WHERE constraint_type = 'FOREIGN KEY'
-AND table_schema = 'nutriomatic';
-
-
-ALTER TABLE activity_levels DROP FOREIGN KEY fk_users_activitylevel;
-ALTER TABLE health_goals DROP FOREIGN KEY fk_users_healthgoal;
-ALTER TABLE tokens DROP FOREIGN KEY fk_tokens_user;
-ALTER TABLE users DROP FOREIGN KEY FK_users_activity_levels;
-ALTER TABLE users DROP FOREIGN KEY FK_users_health_goals;
+CREATE TABLE `tokens` (
+  `user_id` varchar(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `token` varchar(255) NOT NULL,
+  `expires_at` datetime NOT NULL,
+  `created_at` datetime NOT NULL,
+  `updated_at` datetime NOT NULL,
+  `deleted_at` datetime DEFAULT NULL,
+  UNIQUE KEY `token` (`token`),
+  UNIQUE KEY `idx_tokens_deleted_at` (`deleted_at`) USING BTREE,
+  KEY `unique_user_id` (`user_id`) USING BTREE
+)

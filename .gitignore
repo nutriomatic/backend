@@ -1,3 +1,7 @@
 .env
 capstone-trial-425115-dbf96ccd90f6.json
 app.yaml
+server-ca.pem
+client-cert.pem
+client-key.pem
+c241-ps219-ab6446ebf2e7.json

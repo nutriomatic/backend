@@ -26,7 +26,12 @@ func NewProductController() *productController {
 func (pc *productController) CreateProduct(c echo.Context) error {
 	_, err := pc.TokenService.UserByToken(c)
 	if err != nil {
-		return echo.ErrUnauthorized
+		response := map[string]interface{}{
+			"code":    http.StatusForbidden,
+			"status":  "failed",
+			"message": "unauthorized",
+		}
+		return c.JSON(http.StatusForbidden, response)
 	}
 
 	err = pc.ProductService.CreateProduct(c)

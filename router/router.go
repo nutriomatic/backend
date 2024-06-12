@@ -31,6 +31,7 @@ func InitRouter(e *echo.Echo) {
 	healthGoalController := controllers.NewHealthGoalController()
 	activityLevelController := controllers.NewActivityLevelController()
 	productTypeController := controllers.NewProductTypeController()
+	transactionController := controllers.NewTransactionController()
 
 	authGroup := e.Group("/api/auth")
 	authGroup.POST("/register", authController.Register)
@@ -39,8 +40,7 @@ func InitRouter(e *echo.Echo) {
 	authGroup.POST("/logout", userController.Logout)
 
 	userGroup := e.Group("/api/user")
-	// userGroup.Use(middleware.GetTokenNext)
-	// userGroup.PATCH("/", userController.UpdateUser)
+	userGroup.PATCH("/", userController.UpdateUser)
 	userGroup.DELETE("/", userController.DeleteUser)
 
 	storeGroup := e.Group("/api/store")
@@ -76,4 +76,13 @@ func InitRouter(e *echo.Echo) {
 	productTypeGroup.POST("/", productTypeController.CreateProductType)
 	productTypeGroup.DELETE("/:id", productTypeController.DeleteProductType)
 	productTypeGroup.GET("/", productTypeController.GetAllProductType)
+
+	transactionGroup := e.Group("/api/transaction")
+	transactionGroup.POST("/:product_id", transactionController.CreateTransaction)
+	transactionGroup.GET("/:id", transactionController.GetTransactionById)
+	transactionGroup.GET("/", transactionController.GetAllTransaction)
+	transactionGroup.GET("/store/:id", transactionController.GetTransactionByStoreId)
+	transactionGroup.PATCH("/status/:id", transactionController.UpdateStatusTransaction)
+	transactionGroup.DELETE("/:id", transactionController.DeleteTransaction)
+	transactionGroup.POST("/proof/:id", transactionController.UploadProofPayment)
 }

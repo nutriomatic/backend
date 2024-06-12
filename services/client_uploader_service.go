@@ -15,8 +15,8 @@ import (
 )
 
 const (
-	projectID  = "capstone-trial-425115"
-	bucketName = "capstone-trial-425115"
+	projectID  = "c241-ps219"
+	bucketName = "nutrio-storage"
 )
 
 type ClientUploader struct {
@@ -24,10 +24,11 @@ type ClientUploader struct {
 	bucketName  string
 	productPath string
 	userPath    string
+	paymentPath string
 }
 
 func NewClientUploader() *ClientUploader {
-	os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", "capstone-trial-425115-dbf96ccd90f6.json")
+	os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", "c241-ps219-ab6446ebf2e7.json")
 	client, err := storage.NewClient(context.Background())
 	if err != nil {
 		log.Fatalf("Failed to create client: %v", err)
@@ -38,6 +39,7 @@ func NewClientUploader() *ClientUploader {
 		bucketName:  bucketName,
 		productPath: "productImage/",
 		userPath:    "profileImage/",
+		paymentPath: "proofPayment/",
 	}
 }
 
@@ -98,10 +100,18 @@ func (cu *ClientUploader) ProcessImageProduct(c echo.Context) (string, error) {
 	return cu.ProcessImage(c, cu.productPath)
 }
 
+func (cu *ClientUploader) ProcessImageProof(c echo.Context) (string, error) {
+	return cu.ProcessImage(c, cu.paymentPath)
+}
+
 func (cu *ClientUploader) DeleteImageProduct(object string) error {
 	return cu.DeleteImage(cu.productPath, object)
 }
 
 func (cu *ClientUploader) DeleteImageUser(object string) error {
 	return cu.DeleteImage(cu.userPath, object)
+}
+
+func (cu *ClientUploader) DeleteImageProof(object string) error {
+	return cu.DeleteImage(cu.paymentPath, object)
 }

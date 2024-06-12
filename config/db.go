@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/joho/godotenv"
-	_ "github.com/lib/pq"
 	"github.com/sirupsen/logrus"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -23,11 +22,11 @@ func InitDB() *gorm.DB {
 	}
 
 	dbUser := os.Getenv("DB_USER")
-	dbPassword := os.Getenv("DB_PASS")
+	dbPassword := os.Getenv("DB_PASSWORD")
 	dbName := os.Getenv("DB_NAME")
-	dbHost := os.Getenv("DB_HOST")
+	instanceConnectionName := os.Getenv("INSTANCE_CONNECTION_NAME")
 
-	dbURI := fmt.Sprintf("%s:%s@tcp(%s:3306)/%s?charset=utf8mb4&parseTime=True&loc=Local", dbUser, dbPassword, dbHost, dbName)
+	dbURI := fmt.Sprintf("%s:%s@unix(/cloudsql/%s)/%s?charset=utf8mb4&parseTime=True&loc=Local", dbUser, dbPassword, instanceConnectionName, dbName)
 
 	newLogger := logger.New(
 		logrus.New(), // Use logrus for logging

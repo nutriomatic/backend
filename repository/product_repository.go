@@ -17,6 +17,7 @@ type ProductRepository interface {
 	DeleteProduct(id string) error
 	GetAllProductAdvertisement(desc, page, pageSize int, search, sort string) ([]models.Product, *dto.Pagination, error)
 	GetAllProductAdvertisementByStoreId(id string, desc, page, pageSize int, search, sort string) ([]models.Product, *dto.Pagination, error)
+	GetStoreByProductId(id string) (*models.Store, error)
 }
 
 type ProductRepositoryGORM struct {
@@ -129,4 +130,13 @@ func (repo *ProductRepositoryGORM) GetAllProductAdvertisementByStoreId(id string
 		return nil, nil, err
 	}
 	return p, pagination, nil
+}
+
+func (repo *ProductRepositoryGORM) GetStoreByProductId(id string) (*models.Store, error) {
+	var s models.Store
+	err := repo.db.Raw("SELECT * FROM stores WHERE store_id = (SELECT store_id FROM products WHERE product_id = ?)", id).Scan(&s).Error
+	if err != nil {
+		return nil, err
+	}
+	return &s, nil
 }

@@ -92,12 +92,12 @@ func (s *storeService) UpdateStore(updateForm *dto.StoreRegisterForm, c echo.Con
 		existingUser.STORE_NAME = updateForm.StoreName
 	}
 
-	if updateForm.StoreUsername != "" {
-		if _, err := s.storeRepo.GetStoreByUsername(updateForm.StoreUsername); err == nil {
-			return echo.NewHTTPError(http.StatusConflict, "Username already exists")
-		}
-		existingUser.STORE_USERNAME = updateForm.StoreUsername
-	}
+	// if updateForm.StoreUsername != "" {
+	// 	if _, err := s.storeRepo.GetStoreByUsername(updateForm.StoreUsername); err == nil {
+	// 		return echo.NewHTTPError(http.StatusConflict, "Username already exists")
+	// 	}
+	// 	existingUser.STORE_USERNAME = updateForm.StoreUsername
+	// }
 
 	if updateForm.StoreAddress != "" {
 		existingUser.STORE_ADDRESS = updateForm.StoreAddress
