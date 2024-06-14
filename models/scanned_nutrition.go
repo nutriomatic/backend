@@ -10,8 +10,8 @@ type ScannedNutrition struct {
 	SN_PRODUCTTYPE string        `gorm:"not null" json:"sn_productType"`
 	SN_INFO        string        `gorm:"not null" json:"sn_info"`
 	SN_PICTURE     string        `gorm:"not null" json:"sn_picture"`
-	CreatedAt      time.Time     `json:"createdAt"`
-	UpdatedAt      time.Time     `json:"updatedAt"`
+	CreatedAt      time.Time     `json:"created_at"`
+	UpdatedAt      time.Time     `json:"updated_at"`
 	NI_ID          string        `json:"ni_id"`
 	NI             NutritionInfo `gorm:"foreignKey:NI_ID;references:NI_ID"`
 	USER_ID        string        `json:"user_id"`

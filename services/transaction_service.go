@@ -18,7 +18,7 @@ type TransactionService interface {
 	GetAllTransaction(desc, page, pageSize int, search, sort string) (*[]models.Transaction, *dto.Pagination, error)
 	GetTransactionByUserId(id string, desc, page, pageSize int, search, sort string) (*[]models.Transaction, *dto.Pagination, error)
 	UpdateStatusTransaction(status string, c echo.Context, id string) error
-	DeleteTransaction(c echo.Context, id string) error
+	DeleteTransaction(c echo.Context) error
 	UploadProofPayment(c echo.Context) error
 }
 
@@ -28,6 +28,7 @@ type transactionService struct {
 	storeRepo   repository.StoreRepository
 	productRepo repository.ProductRepository
 	uploader    *ClientUploader
+	paymentRepo repository.PaymentRepository
 }
 
 func NewTransactionService() TransactionService {
@@ -37,10 +38,17 @@ func NewTransactionService() TransactionService {
 		storeRepo:   repository.NewStoreRepositoryGORM(),
 		productRepo: repository.NewProductRepositoryGORM(),
 		uploader:    NewClientUploader(),
+		paymentRepo: repository.NewPaymentRepositoryGORM(),
 	}
 }
 
 func (s *transactionService) CreateTransaction(c echo.Context) error {
+	paymentMethod := &dto.PaymentTransaction{}
+	err := c.Bind(paymentMethod)
+	if err != nil {
+		return err
+	}
+
 	id := c.Param("product_id")
 	userToken, err := s.tokenRepo.UserToken(middleware.GetToken(c))
 	if err != nil {
@@ -61,12 +69,18 @@ func (s *transactionService) CreateTransaction(c echo.Context) error {
 		return err
 	}
 
+	payment_id, err := s.paymentRepo.GetPaymentIdByMethod(paymentMethod.PaymentMethod)
+	if err != nil {
+		return err
+	}
+
 	newTsc := &models.Transaction{
 		TSC_ID:     uuid.New().String(),
 		TSC_PRICE:  5000.00,
 		TSC_START:  time.Now(),
 		TSC_END:    time.Now().AddDate(0, 0, 1),
 		TSC_STATUS: "pending",
+		PAYMENT_ID: payment_id,
 		STORE_ID:   store.STORE_ID,
 		PRODUCT_ID: id,
 	}
@@ -101,15 +115,6 @@ func (s *transactionService) UpdateStatusTransaction(status string, c echo.Conte
 		return err
 	}
 
-	availStore, err := s.productRepo.GetStoreByProductId(id)
-	if err != nil {
-		return err
-	}
-
-	if store.STORE_ID != availStore.STORE_ID {
-		return err
-	}
-
 	tsc, err := s.tscRepo.GetTransactionById(id)
 	if err != nil {
 		return err
@@ -119,13 +124,11 @@ func (s *transactionService) UpdateStatusTransaction(status string, c echo.Conte
 		return err
 	}
 
-	tsc.TSC_STATUS = status
-	tsc.STORE.UpdatedAt = time.Now()
-
-	return s.tscRepo.UpdateTransaction(tsc)
+	return s.tscRepo.UpdateStatusTransaction(tsc.TSC_ID, status)
 }
 
-func (s *transactionService) DeleteTransaction(c echo.Context, id string) error {
+func (s *transactionService) DeleteTransaction(c echo.Context) error {
+	id := c.Param("id")
 	userToken, err := s.tokenRepo.UserToken(middleware.GetToken(c))
 	if err != nil {
 		return err
@@ -133,15 +136,6 @@ func (s *transactionService) DeleteTransaction(c echo.Context, id string) error 
 
 	store, err := s.storeRepo.GetStoreByUserId(userToken.ID)
 	if err != nil {
-		return err
-	}
-
-	availStore, err := s.productRepo.GetStoreByProductId(id)
-	if err != nil {
-		return err
-	}
-
-	if store.STORE_ID != availStore.STORE_ID {
 		return err
 	}
 
@@ -185,13 +179,13 @@ func (s *transactionService) UploadProofPayment(c echo.Context) error {
 	}
 	realImagePath := "https://storage.googleapis.com/nutrio-storage/" + imagePath
 
-	tsc, err = s.tscRepo.GetTransactionById(id)
-	if err != nil {
+	tsc.TSC_BUKTI = realImagePath
+	tsc.TSC_STATUS = "paid"
+	tsc.UpdatedAt = time.Now()
+
+	if err := s.tscRepo.UpdateTransaction(tsc); err != nil {
 		return err
 	}
 
-	tsc.TSC_BUKTI = realImagePath
-	tsc.UpdatedAt = time.Now()
-
-	return s.tscRepo.UpdateTransaction(tsc)
+	return nil
 }

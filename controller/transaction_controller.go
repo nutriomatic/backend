@@ -200,8 +200,7 @@ func (tc *transactionController) UpdateStatusTransaction(c echo.Context) error {
 }
 
 func (tc *transactionController) DeleteTransaction(c echo.Context) error {
-	id := c.Param("id")
-	err := tc.TransactionService.DeleteTransaction(c, id)
+	err := tc.TransactionService.DeleteTransaction(c)
 	if err != nil {
 		response := map[string]interface{}{
 			"code":    http.StatusInternalServerError,

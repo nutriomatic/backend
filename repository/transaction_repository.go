@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"errors"
 	"golang-template/config"
 	"golang-template/dto"
 	"golang-template/models"
@@ -107,10 +108,18 @@ func (repo *TransactionRepositoryGORM) GetAllTransaction(desc, page, pageSize in
 	return &t, pagination, nil
 }
 
-func (repo *TransactionRepositoryGORM) UpdateTransaction(t *models.Transaction) error {
-	err := repo.db.Save(&t).Error
-	if err != nil {
-		return err
+func (repo *TransactionRepositoryGORM) UpdateTransaction(transaction *models.Transaction) error {
+	if transaction.TSC_ID == "" {
+		return errors.New("transaction ID is required")
+	}
+
+	result := repo.db.Model(&models.Transaction{}).Where("tsc_id = ?", transaction.TSC_ID).Updates(transaction)
+	if result.Error != nil {
+		return result.Error
+	}
+
+	if result.RowsAffected == 0 {
+		return errors.New("no rows were updated")
 	}
 
 	return nil

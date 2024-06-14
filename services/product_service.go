@@ -15,7 +15,7 @@ import (
 
 type ProductService interface {
 	CreateProduct(c echo.Context) error
-	GetProductById(id string) (*models.Product, error)
+	GetProductById(id string) (*dto.ProductResponse, error)
 	GetProductByStoreId(id string, desc, page, pageSize int, search, sort string) (*[]models.Product, *dto.Pagination, error)
 	GetAllProduct(desc, page, pageSize int, search, sort string) (*[]models.Product, *dto.Pagination, error)
 	UpdateProduct(c echo.Context, id string) error
@@ -163,8 +163,32 @@ func (service *productService) CreateProduct(c echo.Context) error {
 	return nil
 }
 
-func (service *productService) GetProductById(id string) (*models.Product, error) {
-	return service.productRepo.GetProductById(id)
+func (service *productService) GetProductById(id string) (*dto.ProductResponse, error) {
+	p, err := service.productRepo.GetProductById(id)
+	if err != nil {
+		return nil, err
+	}
+
+	pt, err := service.ptService.GetProductTypeById(p.PT_ID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &dto.ProductResponse{
+		ProductID:          p.PRODUCT_ID,
+		ProductName:        p.PRODUCT_NAME,
+		ProductPrice:       p.PRODUCT_PRICE,
+		ProductDesc:        p.PRODUCT_DESC,
+		ProductIsShow:      p.PRODUCT_ISSHOW,
+		ProductLemakTotal:  p.PRODUCT_LEMAKTOTAL,
+		ProductProtein:     p.PRODUCT_PROTEIN,
+		ProductKarbohidrat: p.PRODUCT_KARBOHIDRAT,
+		ProductGaram:       p.PRODUCT_GARAM,
+		ProductGrade:       p.PRODUCT_GRADING,
+		ProductServingSize: p.PRODUCT_SERVINGSIZE,
+		ProductExpShow:     p.PRODUCT_EXPSHOW.String(),
+		PT_Type:            pt.PT_TYPE,
+	}, nil
 }
 
 func (service *productService) GetProductByStoreId(id string, desc, page, pageSize int, search, sort string) (*[]models.Product, *dto.Pagination, error) {
@@ -186,7 +210,7 @@ func (service *productService) CheckProductStore(id string, c echo.Context) erro
 		return echo.NewHTTPError(http.StatusNotFound, "Store not found")
 	}
 
-	product, err := service.GetProductById(id)
+	product, err := service.productRepo.GetProductById(id)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusNotFound, "Product not found")
 	}
@@ -205,7 +229,7 @@ func (service *productService) UpdateProduct(c echo.Context, id string) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	product, err := service.GetProductById(id)
+	product, err := service.productRepo.GetProductById(id)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusNotFound, "Product not found")
 	}
@@ -217,7 +241,8 @@ func (service *productService) UpdateProduct(c echo.Context, id string) error {
 			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 		}
 		service.uploader.DeleteImageProduct(product.PRODUCT_PICTURE)
-		product.PRODUCT_PICTURE = imagePath
+		realImagePath := "https://storage.googleapis.com/nutrio-storage/" + imagePath
+		product.PRODUCT_PICTURE = realImagePath
 	}
 
 	if productForm.ProductName != "" {
@@ -261,7 +286,7 @@ func (service *productService) UpdateProduct(c echo.Context, id string) error {
 }
 
 func (service *productService) DeleteProduct(id string) error {
-	product, err := service.GetProductById(id)
+	product, err := service.productRepo.GetProductById(id)
 	if err != nil {
 		return err
 	}
@@ -270,7 +295,7 @@ func (service *productService) DeleteProduct(id string) error {
 }
 
 func (service *productService) AdvertiseProduct(c echo.Context, id string) error {
-	product, err := service.GetProductById(id)
+	product, err := service.productRepo.GetProductById(id)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusNotFound, "Product not found")
 	}
@@ -286,7 +311,7 @@ func (service *productService) AdvertiseProduct(c echo.Context, id string) error
 }
 
 func (service *productService) UnadvertiseProduct(c echo.Context, id string) error {
-	product, err := service.GetProductById(id)
+	product, err := service.productRepo.GetProductById(id)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusNotFound, "Product not found")
 	}

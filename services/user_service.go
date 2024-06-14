@@ -152,7 +152,8 @@ func (s *userService) UpdateUser(updateForm *dto.RegisterForm, c echo.Context) e
 			return err
 		}
 		s.uploader.DeleteImage(s.uploader.userPath, existingUser.Profpic)
-		existingUser.Profpic = imagePath
+		realImagePath := "https://storage.googleapis.com/nutrio-storage/" + imagePath
+		existingUser.Profpic = realImagePath
 	}
 
 	if updatedUser.Name != "" {
