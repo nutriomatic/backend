@@ -31,5 +31,6 @@ type ProductResponse struct {
 	ProductGrade       string  `json:"product_grade"`
 	ProductServingSize float64 `json:"product_servingsize"`
 	ProductExpShow     string  `json:"product_expshow"`
+	ProductPicture     string  `json:"product_picture"`
 	PT_Type            int64   `json:"pt_type"`
 }

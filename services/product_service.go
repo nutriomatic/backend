@@ -187,6 +187,7 @@ func (service *productService) GetProductById(id string) (*dto.ProductResponse, 
 		ProductGrade:       p.PRODUCT_GRADING,
 		ProductServingSize: p.PRODUCT_SERVINGSIZE,
 		ProductExpShow:     p.PRODUCT_EXPSHOW.String(),
+		ProductPicture:     p.PRODUCT_PICTURE,
 		PT_Type:            pt.PT_TYPE,
 	}, nil
 }

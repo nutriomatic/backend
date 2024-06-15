@@ -36,7 +36,7 @@ func InitRouter(e *echo.Echo) {
 	authGroup := e.Group("/api/auth")
 	authGroup.POST("/register", authController.Register)
 	authGroup.POST("/login", authController.Login)
-	authGroup.GET("/me", userController.GetUserByToken)
+	authGroup.GET("/me", userController.GetUserById)
 	authGroup.POST("/logout", userController.Logout)
 
 	userGroup := e.Group("/api/user")

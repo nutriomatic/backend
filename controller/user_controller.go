@@ -2,6 +2,8 @@ package controllers
 
 import (
 	"golang-template/dto"
+	"golang-template/middleware"
+	"golang-template/repository"
 	"golang-template/services"
 	"net/http"
 
@@ -11,13 +13,43 @@ import (
 type userController struct {
 	UserService  services.UserService
 	TokenService services.TokenService
+	TokenRepo    repository.TokenRepository
 }
 
 func NewUserController() *userController {
 	return &userController{
 		UserService:  services.NewUserService(),
 		TokenService: services.NewTokenService(),
+		TokenRepo:    repository.NewTokenRepositoryGORM(),
 	}
+}
+
+func (u *userController) GetUserById(c echo.Context) error {
+	tokenUser, err := u.TokenRepo.UserToken(middleware.GetToken(c))
+	if err != nil {
+		response := map[string]interface{}{
+			"code":    http.StatusUnauthorized,
+			"status":  "error",
+			"message": "Unauthorized",
+		}
+		return c.JSON(http.StatusUnauthorized, response)
+	}
+
+	user, err := u.UserService.GetUserById(tokenUser.ID)
+	if err != nil {
+		response := map[string]interface{}{
+			"code":    http.StatusNotFound,
+			"status":  "error",
+			"message": "User not found",
+		}
+		return c.JSON(http.StatusNotFound, response)
+	}
+	response := map[string]interface{}{
+		"code":   http.StatusOK,
+		"status": "success",
+		"user":   user,
+	}
+	return c.JSON(http.StatusOK, response)
 }
 
 func (u *userController) GetUserByToken(c echo.Context) error {

@@ -16,7 +16,7 @@ import (
 
 type UserService interface {
 	CreateUser(registerReq *dto.Register) error
-	GetUserById(id string) (*models.User, error)
+	GetUserById(id string) (*dto.UserResponseToken, error)
 	// GetUserByUsername(username string) (*models.User, error)
 	GetUserByEmail(email string) (*models.User, error)
 	UpdateUser(updateForm *dto.RegisterForm, c echo.Context) error
@@ -125,8 +125,46 @@ func (s *userService) GetUserByEmail(email string) (*models.User, error) {
 	return s.userRepo.GetUserByEmail(email)
 }
 
-func (s *userService) GetUserById(id string) (*models.User, error) {
-	return s.userRepo.GetUserById(id)
+func (s *userService) GetUserById(id string) (*dto.UserResponseToken, error) {
+	User, err := s.userRepo.GetUserById(id)
+	if err != nil {
+		return nil, err
+	}
+
+	al, err := s.alRepo.GetActivityLevelById(User.AL_ID)
+	if err != nil {
+		return nil, err
+	}
+
+	hg, err := s.hgRepo.GetById(User.HG_ID)
+	if err != nil {
+		return nil, err
+	}
+
+	response := &dto.UserResponseToken{
+		Id:   User.ID,
+		Name: User.Name,
+		// Username:   User.Username,
+		Email:      User.Email,
+		Role:       User.Role,
+		Gender:     User.Gender,
+		Telp:       User.Telp,
+		Profpic:    User.Profpic,
+		Birthdate:  User.Birthdate,
+		Place:      User.Place,
+		Height:     User.Height,
+		Weight:     User.Weight,
+		WeightGoal: User.WeightGoal,
+		HG_ID:      User.HG_ID,
+		HG_TYPE:    hg.HG_TYPE,
+		HG_DESC:    hg.HG_DESC,
+		AL_ID:      User.AL_ID,
+		AL_TYPE:    al.AL_TYPE,
+		AL_DESC:    al.AL_DESC,
+		AL_VALUE:   al.AL_VALUE,
+	}
+
+	return response, nil
 }
 
 func (s *userService) UpdateUser(updateForm *dto.RegisterForm, c echo.Context) error {
