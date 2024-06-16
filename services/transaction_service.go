@@ -23,22 +23,24 @@ type TransactionService interface {
 }
 
 type transactionService struct {
-	tscRepo     repository.TransactionRepository
-	tokenRepo   repository.TokenRepository
-	storeRepo   repository.StoreRepository
-	productRepo repository.ProductRepository
-	uploader    *ClientUploader
-	paymentRepo repository.PaymentRepository
+	tscRepo        repository.TransactionRepository
+	tokenRepo      repository.TokenRepository
+	storeRepo      repository.StoreRepository
+	productRepo    repository.ProductRepository
+	uploader       *ClientUploader
+	paymentRepo    repository.PaymentRepository
+	productService ProductService
 }
 
 func NewTransactionService() TransactionService {
 	return &transactionService{
-		tscRepo:     repository.NewTransactionProductRepositoryGORM(),
-		tokenRepo:   repository.NewTokenRepositoryGORM(),
-		storeRepo:   repository.NewStoreRepositoryGORM(),
-		productRepo: repository.NewProductRepositoryGORM(),
-		uploader:    NewClientUploader(),
-		paymentRepo: repository.NewPaymentRepositoryGORM(),
+		tscRepo:        repository.NewTransactionProductRepositoryGORM(),
+		tokenRepo:      repository.NewTokenRepositoryGORM(),
+		storeRepo:      repository.NewStoreRepositoryGORM(),
+		productRepo:    repository.NewProductRepositoryGORM(),
+		uploader:       NewClientUploader(),
+		paymentRepo:    repository.NewPaymentRepositoryGORM(),
+		productService: NewProductService(),
 	}
 }
 
@@ -122,6 +124,13 @@ func (s *transactionService) UpdateStatusTransaction(status string, c echo.Conte
 
 	if tsc.STORE_ID != store.STORE_ID {
 		return err
+	}
+
+	if status == "accepted" {
+		err := s.productService.AdvertiseProduct(c, tsc.PRODUCT_ID)
+		if err != nil {
+			return err
+		}
 	}
 
 	return s.tscRepo.UpdateStatusTransaction(tsc.TSC_ID, status)
