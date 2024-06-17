@@ -43,6 +43,7 @@ func InitRouter(e *echo.Echo) {
 	userGroup := e.Group("/api/user")
 	userGroup.PATCH("/", userController.UpdateUser)
 	userGroup.DELETE("/", userController.DeleteUser)
+	userGroup.GET("/cal", userController.GetClassCalories)
 
 	storeGroup := e.Group("/api/store")
 	storeGroup.POST("/", storeController.CreateStore)

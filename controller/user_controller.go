@@ -66,6 +66,21 @@ func (u *userController) GetUserByToken(c echo.Context) error {
 	}
 }
 
+func (u *userController) GetClassCalories(c echo.Context) error {
+	calories, classification, err := u.UserService.GetClassCalories(c)
+	if err != nil {
+		return c.String(http.StatusInternalServerError, "error in getting class calories")
+	}
+
+	response := map[string]interface{}{
+		"code":           http.StatusOK,
+		"status":         "success",
+		"calories":       calories,
+		"classification": classification,
+	}
+	return c.JSON(http.StatusOK, response)
+}
+
 func (u *userController) UpdateUser(c echo.Context) error {
 	updateForm := &dto.RegisterForm{}
 	err := c.Bind(updateForm)
