@@ -123,15 +123,16 @@ func (a *authController) Login(c echo.Context) error {
 		}
 		var loginmessage string
 
-		if user.Role == "customer" {
-			loginmessage = "You are logged in as customer"
-		} else {
+		if user.Role == "admin" {
 			loginmessage = "You are logged in as admin"
+		} else {
+			loginmessage = "You are logged in as customer"
 		}
 
 		return c.JSON(http.StatusOK, map[string]string{
 			"code":    "200",
 			"status":  "success",
+			"role":    user.Role,
 			"message": loginmessage,
 			"token":   token,
 		})
