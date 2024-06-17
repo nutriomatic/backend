@@ -32,6 +32,7 @@ func InitRouter(e *echo.Echo) {
 	activityLevelController := controllers.NewActivityLevelController()
 	productTypeController := controllers.NewProductTypeController()
 	transactionController := controllers.NewTransactionController()
+	snController := controllers.NewScannedNutritionController()
 
 	authGroup := e.Group("/api/auth")
 	authGroup.POST("/register", authController.Register)
@@ -85,4 +86,9 @@ func InitRouter(e *echo.Echo) {
 	transactionGroup.PATCH("/status/:id", transactionController.UpdateStatusTransaction)
 	transactionGroup.DELETE("/:id", transactionController.DeleteTransaction)
 	transactionGroup.POST("/proof/:id", transactionController.UploadProofPayment)
+
+	snGroup := e.Group("/api/scanned-nutrition")
+	snGroup.POST("/", snController.CreateScannedNutrition)
+	snGroup.GET("/:id", snController.GetScannedNutritionById)
+	snGroup.GET("/", snController.GetScannedNutritionByUserId)
 }

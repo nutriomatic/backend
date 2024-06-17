@@ -25,6 +25,7 @@ type ClientUploader struct {
 	productPath string
 	userPath    string
 	paymentPath string
+	scannedPath string
 }
 
 func NewClientUploader() *ClientUploader {
@@ -40,6 +41,7 @@ func NewClientUploader() *ClientUploader {
 		productPath: "productImage/",
 		userPath:    "profileImage/",
 		paymentPath: "proofPayment/",
+		scannedPath: "scannedNutrition/",
 	}
 }
 
@@ -104,6 +106,10 @@ func (cu *ClientUploader) ProcessImageProof(c echo.Context) (string, error) {
 	return cu.ProcessImage(c, cu.paymentPath)
 }
 
+func (cu *ClientUploader) ProcessImageScannedNutrition(c echo.Context) (string, error) {
+	return cu.ProcessImage(c, cu.scannedPath)
+}
+
 func (cu *ClientUploader) DeleteImageProduct(object string) error {
 	return cu.DeleteImage(cu.productPath, object)
 }
@@ -114,4 +120,8 @@ func (cu *ClientUploader) DeleteImageUser(object string) error {
 
 func (cu *ClientUploader) DeleteImageProof(object string) error {
 	return cu.DeleteImage(cu.paymentPath, object)
+}
+
+func (cu *ClientUploader) DeleteImageScannedNutrition(object string) error {
+	return cu.DeleteImage(cu.scannedPath, object)
 }

@@ -19,4 +19,6 @@ type ScannedNutrition struct {
 	SN_GRADE        string    `json:"sn_grade"`
 	CreatedAt       time.Time `json:"created_at"`
 	UpdatedAt       time.Time `json:"updated_at"`
+	USER_ID         string    `json:"user_id"`
+	USER            User      `gorm:"foreignKey:USER_ID;references:ID" json:"-"`
 }
