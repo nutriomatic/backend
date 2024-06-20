@@ -103,7 +103,15 @@ func (repo *ProductRepositoryGORM) GetAllProductAdvertisement(desc, page, pageSi
 	}
 
 	if sort != "" {
-		query = query.Order(sort)
+		if sort == "updated_at" {
+			if desc == 1 {
+				query = query.Order("updated_at DESC")
+			} else {
+				query = query.Order("updated_at ASC")
+			}
+		} else {
+			query = query.Order(sort)
+		}
 	}
 
 	pagination, err := dto.GetPaginated(query, page, pageSize, &p)

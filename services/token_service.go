@@ -14,6 +14,7 @@ type TokenService interface {
 	UserByToken(c echo.Context) (*dto.UserResponseToken, error)
 	UserToken(c echo.Context) (*models.User, error)
 	IsAdmin(c echo.Context) bool
+	CheckToken(c echo.Context, token string) error
 }
 
 type tokenService struct {
@@ -23,6 +24,25 @@ type tokenService struct {
 func NewTokenService() TokenService {
 	return &tokenService{
 		tokenRepo: repository.NewTokenRepositoryGORM(),
+	}
+}
+
+func (s *tokenService) CheckToken(c echo.Context, token string) error {
+	status := s.tokenRepo.FindToken(token)
+	if status {
+		response := map[string]interface{}{
+			"code":    200,
+			"status":  "success",
+			"message": "Token is valid",
+		}
+		return c.JSON(200, response)
+	} else {
+		response := map[string]interface{}{
+			"code":    401,
+			"status":  "error",
+			"message": "Token is invalid",
+		}
+		return c.JSON(401, response)
 	}
 }
 

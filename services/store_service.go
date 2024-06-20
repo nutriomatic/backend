@@ -20,17 +20,20 @@ type StoreService interface {
 	DeleteStore(c echo.Context) error
 	GetAll(desc, page, pageSize int, search, sort string) (*[]models.Store, *dto.Pagination, error)
 	GetStoreUsernameByToken(c echo.Context) (string, error)
+	GetStorePay(c echo.Context) (float64, error)
 }
 
 type storeService struct {
 	storeRepo repository.StoreRepository
 	tokenRepo repository.TokenRepository
+	tscRepo   repository.TransactionRepository
 }
 
 func NewStoreService() StoreService {
 	return &storeService{
 		storeRepo: repository.NewStoreRepositoryGORM(),
 		tokenRepo: repository.NewTokenRepositoryGORM(),
+		tscRepo:   repository.NewTransactionRepositoryGORM(),
 	}
 }
 
@@ -127,4 +130,30 @@ func (s *storeService) DeleteStore(c echo.Context) error {
 
 func (s *storeService) GetAll(desc, page, pageSize int, search, sort string) (*[]models.Store, *dto.Pagination, error) {
 	return s.storeRepo.GetAll(desc, page, pageSize, search, sort)
+}
+
+func (s *storeService) GetStorePay(c echo.Context) (float64, error) {
+	tokenUser, err := s.tokenRepo.UserToken(middleware.GetToken(c))
+	if err != nil {
+		return 0, echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized")
+	}
+
+	store, err := s.storeRepo.GetStoreByUserId(tokenUser.ID)
+	if err != nil {
+		return 0, echo.NewHTTPError(http.StatusNotFound, "Store not found")
+	}
+
+	pendings, err := s.tscRepo.FindAllPendingByStoreId(store.STORE_ID)
+	if err != nil {
+		return 0, echo.NewHTTPError(http.StatusNotFound, "Transaction Pending not found")
+	}
+
+	var sum float64 = 0
+	for _, pending := range *pendings {
+		if pending.TSC_STATUS == "pending" {
+			sum = sum + pending.TSC_PRICE
+		}
+	}
+
+	return sum, nil
 }

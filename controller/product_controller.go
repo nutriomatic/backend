@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"golang-template/dto"
 	"golang-template/services"
 	"net/http"
 	"strconv"
@@ -90,9 +89,10 @@ func (pc *productController) GetProductByStoreId(c echo.Context) error {
 		}
 	}
 
-	sort := c.QueryParam("sort")
-	if sort != "" && !dto.IsValidSortField(sort) {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid sort fields"})
+	var sort string
+	s := c.QueryParam("sort")
+	if sort != "" {
+		sort = s
 	}
 
 	var desc int
@@ -144,9 +144,10 @@ func (pc *productController) GetAllProduct(c echo.Context) error {
 		}
 	}
 
-	sort := c.QueryParam("sort")
-	if sort != "" && !dto.IsValidSortField(sort) {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid sort fields"})
+	var sort string
+	s := c.QueryParam("sort")
+	if sort != "" {
+		sort = s
 	}
 
 	var desc int
@@ -316,9 +317,10 @@ func (pc *productController) GetAllProductAdvertisement(c echo.Context) error {
 		}
 	}
 
-	sort := c.QueryParam("sort")
-	if sort != "" && !dto.IsValidSortField(sort) {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid sort fields"})
+	var sort string
+	s := c.QueryParam("sort")
+	if sort != "" {
+		sort = s
 	}
 
 	var desc int
@@ -370,9 +372,10 @@ func (pc *productController) GetAllProductAdvertisementByStoreId(c echo.Context)
 		}
 	}
 
-	sort := c.QueryParam("sort")
-	if sort != "" && !dto.IsValidSortField(sort) {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid sort fields"})
+	var sort string
+	s := c.QueryParam("sort")
+	if sort != "" {
+		sort = s
 	}
 
 	var desc int

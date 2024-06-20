@@ -181,9 +181,10 @@ func (s *storeController) GetAllStores(c echo.Context) error {
 		}
 	}
 
-	sort := c.QueryParam("sort")
-	if sort != "" && !dto.IsValidSortField(sort) {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid sort fields"})
+	var sort string
+	st := c.QueryParam("sort")
+	if sort != "" {
+		sort = st
 	}
 
 	var desc int
@@ -214,5 +215,26 @@ func (s *storeController) GetAllStores(c echo.Context) error {
 		"stores":     stores,
 		"pagination": pagination,
 	}
+	return c.JSON(http.StatusOK, response)
+}
+
+func (s *storeController) GetStorePay(c echo.Context) error {
+	sum, err := s.StoreService.GetStorePay(c)
+	if err != nil {
+		response := map[string]interface{}{
+			"code":    http.StatusInternalServerError,
+			"status":  "error",
+			"message": err.Error(),
+		}
+
+		return c.JSON(http.StatusInternalServerError, response)
+	}
+
+	response := map[string]interface{}{
+		"code":   http.StatusOK,
+		"sum":    sum,
+		"status": "success",
+	}
+
 	return c.JSON(http.StatusOK, response)
 }

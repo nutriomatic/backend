@@ -17,6 +17,8 @@ type ScannedNutrition struct {
 	SN_SUGAR        float64   `json:"sn_sugar"`
 	SN_SALT         float64   `json:"sn_salt"`
 	SN_GRADE        string    `json:"sn_grade"`
+	SN_SATURATEDFAT float64   `gorm:"column:product_saturatedfat" json:"product_saturatedfat"`
+	SN_FIBER        float64   `gorm:"column:product_fiber" json:"product_fiber"`
 	CreatedAt       time.Time `json:"created_at"`
 	UpdatedAt       time.Time `json:"updated_at"`
 	USER_ID         string    `json:"user_id"`

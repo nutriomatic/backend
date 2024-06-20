@@ -15,6 +15,7 @@ type TokenRepository interface {
 	UserByToken(token string) (*dto.UserResponseToken, error)
 	FindUserId(token string) string
 	UserToken(token string) (*models.User, error)
+	FindToken(token string) bool
 }
 
 type TokenRepositoryGORM struct {
@@ -64,6 +65,22 @@ func (repo *TokenRepositoryGORM) FindUserId(token string) string {
 	}
 
 	return AccessToken.UserId
+}
+
+func (repo *TokenRepositoryGORM) FindToken(token string) bool {
+	var AccessToken models.Token
+
+	err := repo.db.Where("token = ?", token).
+		Where("expires_at > ?", time.Now()).
+		Where("deleted_at IS NULL").
+		First(&AccessToken).Error
+
+	if err == nil {
+		return true
+	}
+
+	return false
+
 }
 
 func (repo *TokenRepositoryGORM) UserToken(token string) (*models.User, error) {

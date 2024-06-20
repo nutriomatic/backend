@@ -14,10 +14,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-const (
-	projectID  = "c241-ps219"
-	bucketName = "nutrio-storage"
-)
+var bucketName = os.Getenv("BUCKET_NAME")
 
 type ClientUploader struct {
 	client      *storage.Client

@@ -53,9 +53,9 @@ func (tc *transactionController) GetTransactionById(c echo.Context) error {
 	}
 
 	response := map[string]interface{}{
-		"code":    200,
-		"status":  "success",
-		"message": transaction,
+		"code":        200,
+		"status":      "success",
+		"transaction": transaction,
 	}
 	return c.JSON(200, response)
 }
@@ -77,9 +77,10 @@ func (tc *transactionController) GetTransactionByStoreId(c echo.Context) error {
 		}
 	}
 
-	sort := c.QueryParam("sort")
-	if sort != "" && !dto.IsValidSortField(sort) {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid sort fields"})
+	var sort string
+	s := c.QueryParam("sort")
+	if sort != "" {
+		sort = s
 	}
 
 	var desc int
@@ -131,9 +132,10 @@ func (tc *transactionController) GetAllTransaction(c echo.Context) error {
 		}
 	}
 
-	sort := c.QueryParam("sort")
-	if sort != "" && !dto.IsValidSortField(sort) {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid sort fields"})
+	var sort string
+	s := c.QueryParam("sort")
+	if s != "" {
+		sort = s
 	}
 
 	var desc int
@@ -148,7 +150,12 @@ func (tc *transactionController) GetAllTransaction(c echo.Context) error {
 		search = sp
 	}
 
-	transactions, pagination, err := tc.TransactionService.GetAllTransaction(desc, page, pageSize, search, sort)
+	var status string
+	if st := c.QueryParam("status"); st != "" {
+		status = st
+	}
+
+	transactions, pagination, err := tc.TransactionService.GetAllTransaction(desc, page, pageSize, search, sort, status)
 	if err != nil {
 		response := map[string]interface{}{
 			"code":       http.StatusInternalServerError,
@@ -232,7 +239,7 @@ func (tc *transactionController) UploadProofPayment(c echo.Context) error {
 	response := map[string]interface{}{
 		"code":    http.StatusOK,
 		"status":  "success",
-		"message": "Proof payment uploaded successfully",
+		"message": "Payment proof uploaded successfully",
 	}
 	return c.JSON(http.StatusOK, response)
 }

@@ -6,10 +6,12 @@ import (
 	"golang-template/models"
 	"golang-template/repository"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 )
 
@@ -56,13 +58,17 @@ func ParseProductForm(c echo.Context) (*dto.ProductRegisterForm, error) {
 	productGaramStr := c.FormValue("product_garam")
 	productGrade := c.FormValue("product_grade")
 	productServingSizeStr := c.FormValue("product_servingsize")
+	productEnergiStr := c.FormValue("product_energi")
+	productGulaStr := c.FormValue("product_gula")
+	productSaturatedFatStr := c.FormValue("product_saturatedfat")
+	productFiberStr := c.FormValue("product_fiber")
 	ptType := c.FormValue("pt_type")
 
 	productPrice, err := strconv.ParseFloat(productPriceStr, 64)
 	if err != nil {
 		return nil, echo.NewHTTPError(http.StatusBadRequest, "Invalid product price")
 	}
-	productIsShow, err := strconv.ParseBool(productIsShowStr)
+	productIsShow, err := strconv.ParseInt(productIsShowStr, 10, 64)
 	if err != nil {
 		return nil, echo.NewHTTPError(http.StatusBadRequest, "Invalid product isShow value")
 	}
@@ -86,6 +92,22 @@ func ParseProductForm(c echo.Context) (*dto.ProductRegisterForm, error) {
 	if err != nil {
 		return nil, echo.NewHTTPError(http.StatusBadRequest, "Invalid product serving size")
 	}
+	productEnergi, err := strconv.ParseFloat(productEnergiStr, 64)
+	if err != nil {
+		return nil, echo.NewHTTPError(http.StatusBadRequest, "Invalid product energi")
+	}
+	productGula, err := strconv.ParseFloat(productGulaStr, 64)
+	if err != nil {
+		return nil, echo.NewHTTPError(http.StatusBadRequest, "Invalid product gula")
+	}
+	productSaturatedFat, err := strconv.ParseFloat(productSaturatedFatStr, 64)
+	if err != nil {
+		return nil, echo.NewHTTPError(http.StatusBadRequest, "Invalid product saturated fat")
+	}
+	productFiber, err := strconv.ParseFloat(productFiberStr, 64)
+	if err != nil {
+		return nil, echo.NewHTTPError(http.StatusBadRequest, "Invalid product fiber")
+	}
 
 	ptTypeInt, err := strconv.ParseInt(ptType, 10, 64)
 	if err != nil {
@@ -93,18 +115,22 @@ func ParseProductForm(c echo.Context) (*dto.ProductRegisterForm, error) {
 	}
 
 	return &dto.ProductRegisterForm{
-		ProductName:        productName,
-		ProductPrice:       productPrice,
-		ProductDesc:        productDesc,
-		ProductIsShow:      productIsShow,
-		ProductLemakTotal:  productLemakTotal,
-		ProductProtein:     productProtein,
-		ProductKarbohidrat: productKarbohidrat,
-		ProductGaram:       productGaram,
-		ProductGrade:       productGrade,
-		ProductServingSize: productServingSize,
-		ProductExpShow:     "",
-		PT_Type:            ptTypeInt,
+		ProductName:         productName,
+		ProductPrice:        productPrice,
+		ProductDesc:         productDesc,
+		ProductIsShow:       productIsShow,
+		ProductLemakTotal:   productLemakTotal,
+		ProductProtein:      productProtein,
+		ProductKarbohidrat:  productKarbohidrat,
+		ProductGaram:        productGaram,
+		ProductGrade:        productGrade,
+		ProductServingSize:  productServingSize,
+		ProductEnergi:       productEnergi,
+		ProductGula:         productGula,
+		ProductSaturatedFat: productSaturatedFat,
+		ProductFiber:        productFiber,
+		ProductExpShow:      "",
+		PT_Type:             ptTypeInt,
 	}, nil
 }
 
@@ -118,7 +144,12 @@ func (service *productService) CreateProduct(c echo.Context) error {
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
-	realImagePath := "https://storage.googleapis.com/nutrio-storage/" + imagePath
+
+	err = godotenv.Load(".env")
+	if err != nil {
+		return err
+	}
+	realImagePath := os.Getenv("IMAGE_PATH") + imagePath
 
 	UserToken, err := service.tokenRepo.UserToken(middleware.GetToken(c))
 	if err != nil {
@@ -134,30 +165,64 @@ func (service *productService) CreateProduct(c echo.Context) error {
 	if err != nil {
 		return echo.NewHTTPError(http.StatusNotFound, "Product type not found")
 	}
+	product_id := uuid.New().String()
 
 	product := models.Product{
-		PRODUCT_ID:          uuid.New().String(),
-		PRODUCT_NAME:        productForm.ProductName,
-		PRODUCT_PRICE:       productForm.ProductPrice,
-		PRODUCT_DESC:        productForm.ProductDesc,
-		PRODUCT_ISSHOW:      productForm.ProductIsShow,
-		PRODUCT_LEMAKTOTAL:  productForm.ProductLemakTotal,
-		PRODUCT_PROTEIN:     productForm.ProductProtein,
-		PRODUCT_KARBOHIDRAT: productForm.ProductKarbohidrat,
-		PRODUCT_GARAM:       productForm.ProductGaram,
-		PRODUCT_SERVINGSIZE: productForm.ProductServingSize,
-		PRODUCT_PICTURE:     realImagePath,
-		PRODUCT_GRADING:     productForm.ProductGrade,
-		PRODUCT_EXPSHOW:     time.Now(),
-		CreatedAt:           time.Now(),
-		UpdatedAt:           time.Now(),
-		STORE_ID:            store.STORE_ID,
-		PT_ID:               pt_id,
+		PRODUCT_ID:           product_id,
+		PRODUCT_NAME:         productForm.ProductName,
+		PRODUCT_PRICE:        productForm.ProductPrice,
+		PRODUCT_DESC:         productForm.ProductDesc,
+		PRODUCT_ISSHOW:       0,
+		PRODUCT_LEMAKTOTAL:   productForm.ProductLemakTotal,
+		PRODUCT_PROTEIN:      productForm.ProductProtein,
+		PRODUCT_KARBOHIDRAT:  productForm.ProductKarbohidrat,
+		PRODUCT_GARAM:        productForm.ProductGaram,
+		PRODUCT_SERVINGSIZE:  productForm.ProductServingSize,
+		PRODUCT_PICTURE:      realImagePath,
+		PRODUCT_EXPSHOW:      time.Now(),
+		PRODUCT_ENERGI:       productForm.ProductEnergi,
+		PRODUCT_GULA:         productForm.ProductGula,
+		PRODUCT_SATURATEDFAT: productForm.ProductSaturatedFat,
+		PRODUCT_FIBER:        productForm.ProductFiber,
+		CreatedAt:            time.Now(),
+		UpdatedAt:            time.Now(),
+		STORE_ID:             store.STORE_ID,
+		PT_ID:                pt_id,
 	}
 
 	err = service.productRepo.CreateProduct(&product)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err)
+		return err
+	}
+
+	err = godotenv.Load(".env")
+	if err != nil {
+		return err
+	}
+	url := os.Getenv("PYTHON_API") + "/grade"
+
+	requestData := &dto.ProductRequest{
+		Energy:       product.PRODUCT_ENERGI,
+		Protein:      product.PRODUCT_PROTEIN,
+		Fat:          product.PRODUCT_LEMAKTOTAL,
+		Carbs:        product.PRODUCT_KARBOHIDRAT,
+		Sugar:        product.PRODUCT_GULA,
+		Salt:         product.PRODUCT_GARAM,
+		SaturatedFat: product.PRODUCT_SATURATEDFAT,
+		Fiber:        product.PRODUCT_FIBER,
+	}
+
+	responseData, _ := SendRequest[dto.ProductRequest, dto.SNResponse](url, *requestData)
+
+	p, err := service.productRepo.GetProductById(product_id)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusNotFound, "Product not found")
+	}
+
+	p.PRODUCT_GRADING = responseData.Grade
+	err = service.productRepo.UpdateProduct(p)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Internal server error")
 	}
 
 	return nil
@@ -175,20 +240,24 @@ func (service *productService) GetProductById(id string) (*dto.ProductResponse, 
 	}
 
 	return &dto.ProductResponse{
-		ProductID:          p.PRODUCT_ID,
-		ProductName:        p.PRODUCT_NAME,
-		ProductPrice:       p.PRODUCT_PRICE,
-		ProductDesc:        p.PRODUCT_DESC,
-		ProductIsShow:      p.PRODUCT_ISSHOW,
-		ProductLemakTotal:  p.PRODUCT_LEMAKTOTAL,
-		ProductProtein:     p.PRODUCT_PROTEIN,
-		ProductKarbohidrat: p.PRODUCT_KARBOHIDRAT,
-		ProductGaram:       p.PRODUCT_GARAM,
-		ProductGrade:       p.PRODUCT_GRADING,
-		ProductServingSize: p.PRODUCT_SERVINGSIZE,
-		ProductExpShow:     p.PRODUCT_EXPSHOW.String(),
-		ProductPicture:     p.PRODUCT_PICTURE,
-		PT_Type:            pt.PT_TYPE,
+		ProductID:           p.PRODUCT_ID,
+		ProductName:         p.PRODUCT_NAME,
+		ProductPrice:        p.PRODUCT_PRICE,
+		ProductDesc:         p.PRODUCT_DESC,
+		ProductIsShow:       p.PRODUCT_ISSHOW,
+		ProductLemakTotal:   p.PRODUCT_LEMAKTOTAL,
+		ProductProtein:      p.PRODUCT_PROTEIN,
+		ProductKarbohidrat:  p.PRODUCT_KARBOHIDRAT,
+		ProductGaram:        p.PRODUCT_GARAM,
+		ProductGrade:        p.PRODUCT_GRADING,
+		ProductServingSize:  p.PRODUCT_SERVINGSIZE,
+		ProductExpShow:      p.PRODUCT_EXPSHOW.String(),
+		ProductPicture:      p.PRODUCT_PICTURE,
+		ProductEnergi:       p.PRODUCT_ENERGI,
+		ProductGula:         p.PRODUCT_GULA,
+		ProductSaturatedFat: p.PRODUCT_SATURATEDFAT,
+		ProductFiber:        p.PRODUCT_FIBER,
+		PT_Type:             pt.PT_TYPE,
 	}, nil
 }
 
@@ -242,7 +311,11 @@ func (service *productService) UpdateProduct(c echo.Context, id string) error {
 			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 		}
 		service.uploader.DeleteImageProduct(product.PRODUCT_PICTURE)
-		realImagePath := "https://storage.googleapis.com/nutrio-storage/" + imagePath
+		err = godotenv.Load(".env")
+		if err != nil {
+			return err
+		}
+		realImagePath := os.Getenv("IMAGE_PATH") + imagePath
 		product.PRODUCT_PICTURE = realImagePath
 	}
 
@@ -273,6 +346,19 @@ func (service *productService) UpdateProduct(c echo.Context, id string) error {
 	if productForm.ProductServingSize != 0 {
 		product.PRODUCT_SERVINGSIZE = productForm.ProductServingSize
 	}
+	if productForm.ProductEnergi != 0 {
+		product.PRODUCT_ENERGI = productForm.ProductEnergi
+	}
+	if productForm.ProductGula != 0 {
+		product.PRODUCT_GULA = productForm.ProductGula
+	}
+	if productForm.ProductSaturatedFat != 0 {
+		product.PRODUCT_SATURATEDFAT = productForm.ProductSaturatedFat
+	}
+	if productForm.ProductFiber != 0 {
+		product.PRODUCT_FIBER = productForm.ProductFiber
+	}
+
 	if productForm.PT_Type != 0 {
 		pt_id, err := service.ptService.GetProductTypeIdByType(productForm.PT_Type)
 		if err != nil {
@@ -281,6 +367,30 @@ func (service *productService) UpdateProduct(c echo.Context, id string) error {
 		product.PT_ID = pt_id
 	}
 
+	err = godotenv.Load(".env")
+	if err != nil {
+		return err
+	}
+	url := os.Getenv("PYTHON_API") + "/grade"
+
+	requestData := &dto.ProductRequest{
+		Id:           product.PRODUCT_ID,
+		Energy:       product.PRODUCT_ENERGI,
+		Protein:      product.PRODUCT_PROTEIN,
+		Fat:          product.PRODUCT_LEMAKTOTAL,
+		Carbs:        product.PRODUCT_KARBOHIDRAT,
+		Sugar:        product.PRODUCT_GULA,
+		Salt:         product.PRODUCT_GARAM,
+		SaturatedFat: product.PRODUCT_SATURATEDFAT,
+		Fiber:        product.PRODUCT_FIBER,
+	}
+
+	responseData, err := SendRequest[dto.ProductRequest, dto.SNResponse](url, *requestData)
+	if err != nil {
+		return err
+	}
+
+	product.PRODUCT_GRADING = responseData.Grade
 	product.UpdatedAt = time.Now()
 
 	return service.productRepo.UpdateProduct(product)
@@ -301,7 +411,7 @@ func (service *productService) AdvertiseProduct(c echo.Context, id string) error
 		return echo.NewHTTPError(http.StatusNotFound, "Product not found")
 	}
 
-	product.PRODUCT_ISSHOW = true
+	product.PRODUCT_ISSHOW = 1
 	product.PRODUCT_EXPSHOW = time.Now().AddDate(0, 1, 0)
 	err = service.productRepo.UpdateProduct(product)
 	if err != nil {
@@ -317,7 +427,7 @@ func (service *productService) UnadvertiseProduct(c echo.Context, id string) err
 		return echo.NewHTTPError(http.StatusNotFound, "Product not found")
 	}
 
-	product.PRODUCT_ISSHOW = false
+	product.PRODUCT_ISSHOW = 3
 	err = service.productRepo.UpdateProduct(product)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Internal server error")

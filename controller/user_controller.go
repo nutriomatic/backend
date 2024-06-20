@@ -69,7 +69,12 @@ func (u *userController) GetUserByToken(c echo.Context) error {
 func (u *userController) GetClassCalories(c echo.Context) error {
 	calories, classification, err := u.UserService.GetClassCalories(c)
 	if err != nil {
-		return c.String(http.StatusInternalServerError, "error in getting class calories")
+		response := map[string]interface{}{
+			"code":    http.StatusInternalServerError,
+			"status":  "error",
+			"message": "internal server error",
+		}
+		return c.JSON(http.StatusInternalServerError, response)
 	}
 
 	response := map[string]interface{}{

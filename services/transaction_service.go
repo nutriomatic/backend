@@ -5,9 +5,11 @@ import (
 	"golang-template/middleware"
 	"golang-template/models"
 	"golang-template/repository"
+	"os"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 )
 
@@ -15,7 +17,7 @@ type TransactionService interface {
 	CreateTransaction(c echo.Context) error
 	GetTransactionById(id string) (*models.Transaction, error)
 	GetTransactionByStoreId(id string, desc, page, pageSize int, search, sort string) (*[]models.Transaction, *dto.Pagination, error)
-	GetAllTransaction(desc, page, pageSize int, search, sort string) (*[]models.Transaction, *dto.Pagination, error)
+	GetAllTransaction(desc, page, pageSize int, search, sort, status string) (*[]models.Transaction, *dto.Pagination, error)
 	GetTransactionByUserId(id string, desc, page, pageSize int, search, sort string) (*[]models.Transaction, *dto.Pagination, error)
 	UpdateStatusTransaction(status string, c echo.Context, id string) error
 	DeleteTransaction(c echo.Context) error
@@ -34,7 +36,7 @@ type transactionService struct {
 
 func NewTransactionService() TransactionService {
 	return &transactionService{
-		tscRepo:        repository.NewTransactionProductRepositoryGORM(),
+		tscRepo:        repository.NewTransactionRepositoryGORM(),
 		tokenRepo:      repository.NewTokenRepositoryGORM(),
 		storeRepo:      repository.NewStoreRepositoryGORM(),
 		productRepo:    repository.NewProductRepositoryGORM(),
@@ -62,16 +64,27 @@ func (s *transactionService) CreateTransaction(c echo.Context) error {
 		return err
 	}
 
-	availStore, err := s.productRepo.GetStoreByProductId(id)
+	// availStore, err := s.productRepo.GetStoreByProductId(id)
+	// if err != nil {
+	// 	return err
+	// }
+
+	// if store.STORE_ID != availStore.STORE_ID {
+	// 	return err
+	// }
+
+	payment_id, err := s.paymentRepo.GetPaymentIdByMethod(paymentMethod.PaymentMethod)
 	if err != nil {
 		return err
 	}
 
-	if store.STORE_ID != availStore.STORE_ID {
+	product, err := s.productRepo.GetProductById(id)
+	if err != nil {
 		return err
 	}
 
-	payment_id, err := s.paymentRepo.GetPaymentIdByMethod(paymentMethod.PaymentMethod)
+	product.PRODUCT_ISSHOW = 2
+	err = s.productRepo.UpdateProduct(product)
 	if err != nil {
 		return err
 	}
@@ -98,8 +111,8 @@ func (s *transactionService) GetTransactionByStoreId(id string, desc, page, page
 	return s.tscRepo.GetTransactionByStoreId(id, desc, page, pageSize, search, sort)
 }
 
-func (s *transactionService) GetAllTransaction(desc, page, pageSize int, search, sort string) (*[]models.Transaction, *dto.Pagination, error) {
-	return s.tscRepo.GetAllTransaction(desc, page, pageSize, search, sort)
+func (s *transactionService) GetAllTransaction(desc, page, pageSize int, search, sort, status string) (*[]models.Transaction, *dto.Pagination, error) {
+	return s.tscRepo.GetAllTransaction(desc, page, pageSize, search, sort, status)
 }
 
 func (s *transactionService) GetTransactionByUserId(id string, desc, page, pageSize int, search, sort string) (*[]models.Transaction, *dto.Pagination, error) {
@@ -107,30 +120,36 @@ func (s *transactionService) GetTransactionByUserId(id string, desc, page, pageS
 }
 
 func (s *transactionService) UpdateStatusTransaction(status string, c echo.Context, id string) error {
-	userToken, err := s.tokenRepo.UserToken(middleware.GetToken(c))
+	_, err := s.tokenRepo.UserToken(middleware.GetToken(c))
 	if err != nil {
 		return err
 	}
 
-	store, err := s.storeRepo.GetStoreByUserId(userToken.ID)
-	if err != nil {
-		return err
-	}
+	// store, err := s.storeRepo.GetStoreByUserId(userToken.ID)
+	// if err != nil {
+	// 	return err
+	// }
 
 	tsc, err := s.tscRepo.GetTransactionById(id)
 	if err != nil {
 		return err
 	}
 
-	if tsc.STORE_ID != store.STORE_ID {
-		return err
-	}
+	// if tsc.STORE_ID != store.STORE_ID {
+	// 	return err
+	// }
 
 	if status == "accepted" {
 		err := s.productService.AdvertiseProduct(c, tsc.PRODUCT_ID)
 		if err != nil {
 			return err
 		}
+	} else {
+		err := s.productService.UnadvertiseProduct(c, tsc.PRODUCT_ID)
+		if err != nil {
+			return err
+		}
+
 	}
 
 	return s.tscRepo.UpdateStatusTransaction(tsc.TSC_ID, status)
@@ -161,8 +180,6 @@ func (s *transactionService) DeleteTransaction(c echo.Context) error {
 }
 
 func (s *transactionService) UploadProofPayment(c echo.Context) error {
-	id := c.Param("id")
-
 	userToken, err := s.tokenRepo.UserToken(middleware.GetToken(c))
 	if err != nil {
 		return err
@@ -173,12 +190,8 @@ func (s *transactionService) UploadProofPayment(c echo.Context) error {
 		return err
 	}
 
-	tsc, err := s.tscRepo.GetTransactionById(id)
+	tsc, err := s.tscRepo.FindAllNewTransactions(store.STORE_ID)
 	if err != nil {
-		return err
-	}
-
-	if tsc.STORE_ID != store.STORE_ID {
 		return err
 	}
 
@@ -186,15 +199,20 @@ func (s *transactionService) UploadProofPayment(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	realImagePath := "https://storage.googleapis.com/nutrio-storage/" + imagePath
-
-	tsc.TSC_BUKTI = realImagePath
-	tsc.TSC_STATUS = "paid"
-	tsc.UpdatedAt = time.Now()
-
-	if err := s.tscRepo.UpdateTransaction(tsc); err != nil {
+	err = godotenv.Load(".env")
+	if err != nil {
 		return err
 	}
+	realImagePath := os.Getenv("IMAGE_PATH") + imagePath
 
+	// loop each transactions
+	for _, transaction := range *tsc {
+		transaction.TSC_BUKTI = realImagePath
+		transaction.UpdatedAt = time.Now()
+		if err := s.tscRepo.UpdateTransaction(&transaction); err != nil {
+			return err
+		}
+
+	}
 	return nil
 }

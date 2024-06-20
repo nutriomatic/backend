@@ -65,7 +65,7 @@ func UpdateProductIsShow(db *gorm.DB) error {
 	}
 
 	for _, product := range products {
-		product.PRODUCT_ISSHOW = false
+		product.PRODUCT_ISSHOW = 0
 		if err := db.Save(&product).Error; err != nil {
 			return err
 		}

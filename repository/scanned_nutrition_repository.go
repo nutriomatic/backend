@@ -11,7 +11,7 @@ import (
 type ScannedNutritionRepository interface {
 	CreateScannedNutrition(sn *models.ScannedNutrition) error
 	GetScannedNutritionById(id string) (*models.ScannedNutrition, error)
-	GetScannedNutritionByUserId(desc, page, pageSize int, search, sort, id string) ([]models.ScannedNutrition, *dto.Pagination, error)
+	GetScannedNutritionByUserId(desc, page, pageSize int, search, sort, grade, id string) ([]models.ScannedNutrition, *dto.Pagination, error)
 }
 
 type ScannedNutritionRepositoryGORM struct {
@@ -42,7 +42,7 @@ func (repo *ScannedNutritionRepositoryGORM) GetScannedNutritionById(id string) (
 	return &sn, nil
 }
 
-func (repo *ScannedNutritionRepositoryGORM) GetScannedNutritionByUserId(desc, page, pageSize int, search, sort, id string) ([]models.ScannedNutrition, *dto.Pagination, error) {
+func (repo *ScannedNutritionRepositoryGORM) GetScannedNutritionByUserId(desc, page, pageSize int, search, sort, id, grade string) ([]models.ScannedNutrition, *dto.Pagination, error) {
 	var sn []models.ScannedNutrition
 	query := repo.db.Where("user_id = ?", id).Find(&sn)
 
@@ -50,8 +50,16 @@ func (repo *ScannedNutritionRepositoryGORM) GetScannedNutritionByUserId(desc, pa
 		query = query.Where("sn_productname LIKE ?", "%"+search+"%")
 	}
 
+	if grade != "" {
+		query = query.Where("sn_grade = ?", grade)
+	}
+
 	if sort != "" {
-		query = query.Order(sort)
+		order := "ASC"
+		if desc == 1 {
+			order = "DESC"
+		}
+		query = query.Order(sort + " " + order)
 	}
 
 	pagination, err := dto.GetPaginated(query, page, pageSize, &sn)

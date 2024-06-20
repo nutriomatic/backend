@@ -52,6 +52,20 @@ type (
 		AL_DESC    string  `json:"al_desc"`
 		AL_VALUE   float64 `json:"al_value"`
 	}
+
+	UserRequest struct {
+		Id            string  `json:"id"`
+		Gender        int     `json:"gender"`
+		Age           float64 `json:"age"`
+		BodyWeight    float64 `json:"body_weight"`
+		BodyHeight    float64 `json:"body_height"`
+		ActivityLevel int     `json:"activity_level"`
+	}
+
+	UserResponse struct {
+		Classification int64   `json:"weight_status"`
+		Calories       float64 `json:"calories"`
+	}
 )
 
 var Register_Successful = "Registration was successful"

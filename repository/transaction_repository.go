@@ -13,18 +13,20 @@ type TransactionRepository interface {
 	CreateTransaction(t *models.Transaction) error
 	GetTransactionById(id string) (*models.Transaction, error)
 	GetTransactionByStoreId(id string, desc, page, pageSize int, search, sort string) (*[]models.Transaction, *dto.Pagination, error)
-	GetAllTransaction(desc, page, pageSize int, search, sort string) (*[]models.Transaction, *dto.Pagination, error)
+	GetAllTransaction(desc, page, pageSize int, search, sort, status string) (*[]models.Transaction, *dto.Pagination, error)
 	GetTransactionByUserId(id string, desc, page, pageSize int, search, sort string) (*[]models.Transaction, *dto.Pagination, error)
 	UpdateTransaction(t *models.Transaction) error
 	UpdateStatusTransaction(id string, status string) error
 	DeleteTransaction(id string) error
+	FindAllPendingByStoreId(storeId string) (*[]models.Transaction, error)
+	FindAllNewTransactions(id string) (*[]models.Transaction, error)
 }
 
 type TransactionRepositoryGORM struct {
 	db *gorm.DB
 }
 
-func NewTransactionProductRepositoryGORM() *TransactionRepositoryGORM {
+func NewTransactionRepositoryGORM() *TransactionRepositoryGORM {
 	return &TransactionRepositoryGORM{
 		db: config.InitDB(),
 	}
@@ -88,16 +90,20 @@ func (repo *TransactionRepositoryGORM) GetTransactionByUserId(id string, desc, p
 	return &t, pagination, nil
 }
 
-func (repo *TransactionRepositoryGORM) GetAllTransaction(desc, page, pageSize int, search, sort string) (*[]models.Transaction, *dto.Pagination, error) {
+func (repo *TransactionRepositoryGORM) GetAllTransaction(desc, page, pageSize int, search, sort, status string) (*[]models.Transaction, *dto.Pagination, error) {
 	var t []models.Transaction
-	query := repo.db.Find(&t)
+	query := repo.db.Where("tsc_bukti IS NOT NULL").Find(&t)
 
-	if search != "" {
-		query = query.Where("tsc_status LIKE ?", "%"+search+"%")
+	if status != "" {
+		query = query.Where("tsc_status LIKE ?", "%"+status+"%")
 	}
 
 	if sort != "" {
-		query = query.Order(sort)
+		order := "ASC"
+		if desc == 1 {
+			order = "DESC"
+		}
+		query = query.Order(sort + " " + order)
 	}
 
 	pagination, err := dto.GetPaginated(query, page, pageSize, &t)
@@ -143,4 +149,38 @@ func (repo *TransactionRepositoryGORM) DeleteTransaction(id string) error {
 	}
 
 	return nil
+}
+
+func (repo *TransactionRepositoryGORM) FindAllPendingByStoreId(storeId string) (*[]models.Transaction, error) {
+	var t []models.Transaction
+	err := repo.db.Where("store_id = ? AND tsc_status = 'pending'", storeId).Find(&t).Error
+	if err != nil {
+		return nil, err
+	}
+	return &t, nil
+}
+
+func (repo *TransactionRepositoryGORM) FindAllNewTransactions(id string) (*[]models.Transaction, error) {
+	var t []models.Transaction
+	var p []models.Product
+
+	err := repo.db.Where("product_isshow = 2").Find(&p).Error
+	if err != nil {
+		return nil, err
+	}
+
+	productIDs := make([]string, len(p))
+	for i, product := range p {
+		productIDs[i] = product.PRODUCT_ID
+	}
+
+	err = repo.db.Where("product_id IN (?)", productIDs).
+		Where("tsc_bukti IS NULL").
+		Where("store_id = ?", id).
+		Find(&t).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &t, nil
 }

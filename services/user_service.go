@@ -7,10 +7,12 @@ import (
 	"golang-template/repository"
 	"golang-template/utils"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 )
 
@@ -117,10 +119,6 @@ func (s *userService) CreateUser(registerReq *dto.Register) error {
 	return s.userRepo.CreateUser(&newUser)
 }
 
-// func (s *userService) GetUserByUsername(username string) (*models.User, error) {
-// 	return s.userRepo.GetUserByUsername(username)
-// }
-
 func (s *userService) GetUserByEmail(email string) (*models.User, error) {
 	return s.userRepo.GetUserByEmail(email)
 }
@@ -182,6 +180,11 @@ func (s *userService) GetClassCalories(c echo.Context) (float64, int64, error) {
 }
 
 func (s *userService) UpdateUser(updateForm *dto.RegisterForm, c echo.Context) error {
+	err := godotenv.Load(".env")
+	if err != nil {
+		return err
+	}
+
 	tokenUser, err := s.tokenRepo.UserToken(middleware.GetToken(c))
 	if err != nil {
 		return echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized")
@@ -204,7 +207,11 @@ func (s *userService) UpdateUser(updateForm *dto.RegisterForm, c echo.Context) e
 			return err
 		}
 		s.uploader.DeleteImage(s.uploader.userPath, existingUser.Profpic)
-		realImagePath := "https://storage.googleapis.com/nutrio-storage/" + imagePath
+		err = godotenv.Load(".env")
+		if err != nil {
+			return err
+		}
+		realImagePath := os.Getenv("IMAGE_PATH") + imagePath
 		existingUser.Profpic = realImagePath
 	}
 
@@ -254,6 +261,40 @@ func (s *userService) UpdateUser(updateForm *dto.RegisterForm, c echo.Context) e
 		}
 	}
 
+	AL, err := s.alRepo.GetActivityLevelById(existingUser.AL_ID)
+	if err != nil {
+		return err
+	}
+
+	// Calculate Age
+	birthdate, err := time.Parse("2006-01-02", existingUser.Birthdate)
+	if err != nil {
+		return err
+	}
+
+	now := time.Now()
+	years := now.Year() - birthdate.Year()
+	if now.YearDay() < birthdate.YearDay() {
+		years--
+	}
+
+	url := os.Getenv("PYTHON_API") + "/classify"
+	requestData := &dto.UserRequest{
+		Id:            existingUser.ID,
+		Gender:        int(existingUser.Gender),
+		Age:           float64(years),
+		BodyWeight:    existingUser.Weight,
+		BodyHeight:    existingUser.Height,
+		ActivityLevel: int(AL.AL_TYPE),
+	}
+
+	responseData, err := SendRequest[dto.UserRequest, dto.UserResponse](url, *requestData)
+	if err != nil {
+		return err
+	}
+
+	existingUser.Calories = responseData.Calories
+	existingUser.Classification = responseData.Classification
 	return s.userRepo.UpdateUser(existingUser)
 
 }

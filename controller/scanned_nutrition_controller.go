@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"golang-template/dto"
 	"golang-template/services"
 	"net/http"
 	"strconv"
@@ -107,9 +106,10 @@ func (sn *scannedNutritionController) GetScannedNutritionByUserId(c echo.Context
 		}
 	}
 
-	sort := c.QueryParam("sort")
-	if sort != "" && !dto.IsValidSortField(sort) {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid sort fields"})
+	var sort string
+	s := c.QueryParam("sort")
+	if sort != "" {
+		sort = s
 	}
 
 	var desc int
@@ -124,7 +124,12 @@ func (sn *scannedNutritionController) GetScannedNutritionByUserId(c echo.Context
 		search = sp
 	}
 
-	scannedNutrition, pagination, err := sn.SNService.GetScannedNutritionByUserId(desc, page, pageSize, search, sort, user.ID)
+	var grade string
+	if g := c.QueryParam("grade"); g != "" {
+		grade = g
+	}
+
+	scannedNutrition, pagination, err := sn.SNService.GetScannedNutritionByUserId(desc, page, pageSize, search, sort, grade, user.ID)
 	if err != nil {
 		response := map[string]interface{}{
 			"code":    http.StatusInternalServerError,

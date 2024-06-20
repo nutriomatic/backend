@@ -140,3 +140,8 @@ func (a *authController) Login(c echo.Context) error {
 
 	return echo.ErrUnauthorized
 }
+
+func (a *authController) CheckToken(c echo.Context) error {
+	token := middleware.GetToken(c)
+	return a.tokenService.CheckToken(c, token)
+}
