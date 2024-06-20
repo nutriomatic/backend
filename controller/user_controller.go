@@ -112,7 +112,7 @@ func (u *userController) UpdateUser(c echo.Context) error {
 		response := map[string]interface{}{
 			"code":    http.StatusInternalServerError,
 			"status":  "error",
-			"message": "internal server error",
+			"message": err.Error(),
 		}
 		return c.JSON(http.StatusInternalServerError, response)
 	}

@@ -19,7 +19,7 @@ import (
 type UserService interface {
 	CreateUser(registerReq *dto.Register) error
 	GetUserById(id string) (*dto.UserResponseToken, error)
-	GetClassCalories(c echo.Context) (float64, int64, error)
+	GetClassCalories(c echo.Context) (float64, string, error)
 	GetUserByEmail(email string) (*models.User, error)
 	UpdateUser(updateForm *dto.RegisterForm, c echo.Context) error
 	DeleteUser(c echo.Context) error
@@ -165,15 +165,15 @@ func (s *userService) GetUserById(id string) (*dto.UserResponseToken, error) {
 	return response, nil
 }
 
-func (s *userService) GetClassCalories(c echo.Context) (float64, int64, error) {
+func (s *userService) GetClassCalories(c echo.Context) (float64, string, error) {
 	tokenUser, err := s.tokenRepo.UserToken(middleware.GetToken(c))
 	if err != nil {
-		return 0, 0, echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized")
+		return 0, "", echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized")
 	}
 
 	existingUser, err := s.userRepo.GetUserById(tokenUser.ID)
 	if err != nil {
-		return 0, 0, echo.NewHTTPError(http.StatusInternalServerError, "error retrieving user")
+		return 0, "", echo.NewHTTPError(http.StatusInternalServerError, "error retrieving user")
 	}
 
 	return existingUser.Calories, existingUser.Classification, nil
@@ -236,7 +236,7 @@ func (s *userService) UpdateUser(updateForm *dto.RegisterForm, c echo.Context) e
 	}
 
 	if updatedUser.Height != 0 {
-		existingUser.Height = updatedUser.Height
+		existingUser.Height = updatedUser.Height / 100
 	}
 
 	if updatedUser.Weight != 0 {

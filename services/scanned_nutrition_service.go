@@ -1,6 +1,7 @@
 package services
 
 import (
+	"errors"
 	"golang-template/dto"
 	"golang-template/models"
 	"golang-template/repository"
@@ -31,51 +32,64 @@ func NewScannedNutritionService() ScannedNutritionService {
 }
 
 func (s *scannedNutritionService) CreateScannedNutrition(c echo.Context, user_id string) error {
+	// Get form values
 	sn_name := c.FormValue("sn_name")
 
+	// Process uploaded image
 	imagePath, err := s.uploader.ProcessImageScannedNutrition(c)
 	if err != nil {
 		return err
 	}
-	err = godotenv.Load(".env")
-	if err != nil {
-		return err
-	}
-	realImagePath := os.Getenv("IMAGE_PATH") + imagePath
 
+	// Load environment variables
 	err = godotenv.Load(".env")
 	if err != nil {
-		return err
+		return errors.New("failed to load environment variables: " + err.Error())
 	}
+
+	// Construct full image path and API URL
+	realImagePath := os.Getenv("IMAGE_PATH") + imagePath
 	url := os.Getenv("PYTHON_API") + "/ocr"
 
+	// Prepare request data
 	requestData := &dto.SNRequest{
 		Url: realImagePath,
 	}
 
-	responseData, _ := SendRequest[dto.SNRequest, dto.SNResponse](url, *requestData)
+	// Send request and handle response
+	responseData, err := SendRequest[dto.SNRequest, dto.SNResponse](url, *requestData)
+	if err != nil {
+		return errors.New("error sending request to OCR API: " + err.Error())
+	}
 
+	// Create ScannedNutrition object
 	sn := models.ScannedNutrition{
 		SN_ID:           uuid.New().String(),
 		SN_PRODUCTNAME:  sn_name,
-		SN_PRODUCTTYPE:  "",
-		SN_INFO:         "",
+		SN_PRODUCTTYPE:  "", // You might want to populate this field if needed
+		SN_INFO:         "", // Add more fields if needed
 		SN_PICTURE:      realImagePath,
-		SN_ENERGY:       responseData.Energy,
-		SN_PROTEIN:      responseData.Protein,
-		SN_FAT:          responseData.Fat,
-		SN_CARBOHYDRATE: responseData.Carbs,
-		SN_SUGAR:        responseData.Sugar,
-		SN_SALT:         responseData.Salt,
+		SN_ENERGY:       responseData.NutritionFacts.Energy,
+		SN_PROTEIN:      responseData.NutritionFacts.Protein,
+		SN_FAT:          responseData.NutritionFacts.Fat,
+		SN_CARBOHYDRATE: responseData.NutritionFacts.Carbs,
+		SN_SUGAR:        responseData.NutritionFacts.Sugar,
+		SN_SALT:         responseData.NutritionFacts.Sodium,
 		SN_GRADE:        responseData.Grade,
-		SN_SATURATEDFAT: responseData.SaturatedFat,
-		SN_FIBER:        responseData.Fiber,
+		SN_SATURATEDFAT: responseData.NutritionFacts.SaturatedFat,
+		SN_FIBER:        responseData.NutritionFacts.Fiber,
 		CreatedAt:       time.Now(),
 		UpdatedAt:       time.Now(),
 		USER_ID:         user_id,
 	}
 
-	return s.snRepo.CreateScannedNutrition(&sn)
+	// Store the scanned nutrition data
+	err = s.snRepo.CreateScannedNutrition(&sn)
+	if err != nil {
+		return errors.New("failed to store scanned nutrition data: " + err.Error())
+	}
+
+	return nil
 }
 
 func (s *scannedNutritionService) GetScannedNutritionById(id string) (*models.ScannedNutrition, error) {

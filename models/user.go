@@ -20,7 +20,7 @@ type User struct {
 	Weight         float64       `json:"weight"`
 	WeightGoal     float64       `json:"weightGoal"`
 	Calories       float64       `json:"calories"`
-	Classification int64         `json:"classification"`
+	Classification string        `json:"classification"`
 	CreatedAt      time.Time     `json:"createdAt"`
 	UpdatedAt      time.Time     `json:"updatedAt"`
 	HG_ID          string        `gorm:"type:varchar(36)" json:"hg_id"`

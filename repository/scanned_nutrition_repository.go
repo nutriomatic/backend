@@ -42,7 +42,7 @@ func (repo *ScannedNutritionRepositoryGORM) GetScannedNutritionById(id string) (
 	return &sn, nil
 }
 
-func (repo *ScannedNutritionRepositoryGORM) GetScannedNutritionByUserId(desc, page, pageSize int, search, sort, id, grade string) ([]models.ScannedNutrition, *dto.Pagination, error) {
+func (repo *ScannedNutritionRepositoryGORM) GetScannedNutritionByUserId(desc, page, pageSize int, search, sort, grade, id string) ([]models.ScannedNutrition, *dto.Pagination, error) {
 	var sn []models.ScannedNutrition
 	query := repo.db.Where("user_id = ?", id).Find(&sn)
 

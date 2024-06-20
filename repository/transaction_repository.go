@@ -2,9 +2,11 @@ package repository
 
 import (
 	"errors"
+	"fmt"
 	"golang-template/config"
 	"golang-template/dto"
 	"golang-template/models"
+	"log"
 
 	"gorm.io/gorm"
 )
@@ -19,7 +21,8 @@ type TransactionRepository interface {
 	UpdateStatusTransaction(id string, status string) error
 	DeleteTransaction(id string) error
 	FindAllPendingByStoreId(storeId string) (*[]models.Transaction, error)
-	FindAllNewTransactions(id string) (*[]models.Transaction, error)
+	FindAllNewTransactions(desc, page, pageSize int, search, sort, status, id string) (*[]models.Transaction, *dto.Pagination, error)
+	FindAllNewTransactionsWithoutPagination(id string) (*[]models.Transaction, error)
 }
 
 type TransactionRepositoryGORM struct {
@@ -160,13 +163,13 @@ func (repo *TransactionRepositoryGORM) FindAllPendingByStoreId(storeId string) (
 	return &t, nil
 }
 
-func (repo *TransactionRepositoryGORM) FindAllNewTransactions(id string) (*[]models.Transaction, error) {
+func (repo *TransactionRepositoryGORM) FindAllNewTransactions(desc, page, pageSize int, search, sort, status, id string) (*[]models.Transaction, *dto.Pagination, error) {
 	var t []models.Transaction
 	var p []models.Product
 
-	err := repo.db.Where("product_isshow = 2").Find(&p).Error
+	err := repo.db.Where("product_isshow = 2").Where("store_id = ?", id).Find(&p).Error
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	productIDs := make([]string, len(p))
@@ -174,13 +177,61 @@ func (repo *TransactionRepositoryGORM) FindAllNewTransactions(id string) (*[]mod
 		productIDs[i] = product.PRODUCT_ID
 	}
 
-	err = repo.db.Where("product_id IN (?)", productIDs).
-		Where("tsc_bukti IS NULL").
-		Where("store_id = ?", id).
+	query := repo.db.Where("product_id IN (?)", productIDs).
+		Where("tsc_bukti = ?", "")
+
+	if status != "" {
+		query = query.Where("tsc_status LIKE ?", "%"+status+"%")
+	}
+
+	if sort != "" {
+		order := "ASC"
+		if desc == 1 {
+			order = "DESC"
+		}
+		query = query.Order(sort + " " + order)
+	}
+
+	err = query.Find(&t).Error
+	if err != nil {
+		return nil, nil, err
+	}
+
+	pagination, err := dto.GetPaginated(query, page, pageSize, &t)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return &t, pagination, nil
+}
+
+func (repo *TransactionRepositoryGORM) FindAllNewTransactionsWithoutPagination(id string) (*[]models.Transaction, error) {
+	var t []models.Transaction
+	var p []models.Product
+
+	// Query products with product_isshow = 2 and store_id = id
+	err := repo.db.Where("product_isshow = 2").Where("store_id = ?", id).Find(&p).Error
+	if err != nil {
+		return nil, fmt.Errorf("error fetching products: %v", err)
+	}
+
+	productIDs := make([]string, len(p))
+	for i, product := range p {
+		productIDs[i] = product.PRODUCT_ID
+	}
+
+	// Log the number of products found
+	log.Printf("Found %d products", len(p))
+
+	// Query transactions with product_id in productIDs and tsc_bukti is NULL
+	err = repo.db.Where("product_id IN (?)", productIDs).Where("tsc_bukti = ?", "").
 		Find(&t).Error
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error fetching transactions: %v", err)
 	}
+
+	// Log the number of transactions found
+	log.Printf("Found %d transactions", len(t))
 
 	return &t, nil
 }

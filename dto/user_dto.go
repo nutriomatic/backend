@@ -63,7 +63,7 @@ type (
 	}
 
 	UserResponse struct {
-		Classification int64   `json:"weight_status"`
+		Classification string  `json:"weight_status"`
 		Calories       float64 `json:"calories"`
 	}
 )

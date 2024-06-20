@@ -22,6 +22,7 @@ type TransactionService interface {
 	UpdateStatusTransaction(status string, c echo.Context, id string) error
 	DeleteTransaction(c echo.Context) error
 	UploadProofPayment(c echo.Context) error
+	FindAllNewTransactions(desc, page, pageSize int, search, sort, status, id string) (*[]models.Transaction, *dto.Pagination, error)
 }
 
 type transactionService struct {
@@ -190,7 +191,7 @@ func (s *transactionService) UploadProofPayment(c echo.Context) error {
 		return err
 	}
 
-	tsc, err := s.tscRepo.FindAllNewTransactions(store.STORE_ID)
+	tsc, err := s.tscRepo.FindAllNewTransactionsWithoutPagination(store.STORE_ID)
 	if err != nil {
 		return err
 	}
@@ -215,4 +216,8 @@ func (s *transactionService) UploadProofPayment(c echo.Context) error {
 
 	}
 	return nil
+}
+
+func (s *transactionService) FindAllNewTransactions(desc, page, pageSize int, search, sort, status, id string) (*[]models.Transaction, *dto.Pagination, error) {
+	return s.tscRepo.FindAllNewTransactions(desc, page, pageSize, search, sort, status, id)
 }

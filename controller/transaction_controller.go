@@ -12,12 +12,14 @@ import (
 type transactionController struct {
 	TransactionService services.TransactionService
 	TokenService       services.TokenService
+	StoreService       services.StoreService
 }
 
 func NewTransactionController() *transactionController {
 	return &transactionController{
 		TransactionService: services.NewTransactionService(),
 		TokenService:       services.NewTokenService(),
+		StoreService:       services.NewStoreService(),
 	}
 }
 
@@ -240,6 +242,84 @@ func (tc *transactionController) UploadProofPayment(c echo.Context) error {
 		"code":    http.StatusOK,
 		"status":  "success",
 		"message": "Payment proof uploaded successfully",
+	}
+	return c.JSON(http.StatusOK, response)
+}
+
+func (tc *transactionController) Checkout(c echo.Context) error {
+	page := 1
+	pageSize := 10
+
+	if qp := c.QueryParam("page"); qp != "" {
+		if p, err := strconv.Atoi(qp); err == nil {
+			page = p
+		}
+	}
+
+	if qp := c.QueryParam("pageSize"); qp != "" {
+		if ps, err := strconv.Atoi(qp); err == nil {
+			pageSize = ps
+		}
+	}
+
+	var sort string
+	s := c.QueryParam("sort")
+	if s != "" {
+		sort = s
+	}
+
+	var desc int
+	if qp := c.QueryParam("desc"); qp != "" {
+		if ds, err := strconv.Atoi(qp); err == nil {
+			desc = ds
+		}
+	}
+
+	var search string
+	if sp := c.QueryParam("search"); sp != "" {
+		search = sp
+	}
+
+	var status string
+	if st := c.QueryParam("status"); st != "" {
+		status = st
+	}
+
+	userToken, err := tc.TokenService.UserToken(c)
+	if err != nil {
+		response := map[string]interface{}{
+			"code":    http.StatusUnauthorized,
+			"status":  "failed",
+			"message": err.Error(),
+		}
+		return c.JSON(http.StatusUnauthorized, response)
+	}
+	store, err := tc.StoreService.GetStoreByUserId(userToken.ID)
+	if err != nil {
+		response := map[string]interface{}{
+			"code":    http.StatusUnauthorized,
+			"status":  "failed",
+			"message": err.Error(),
+		}
+		return c.JSON(http.StatusUnauthorized, response)
+	}
+
+	tsc, pagination, err := tc.TransactionService.FindAllNewTransactions(desc, page, pageSize, search, sort, status, store.STORE_ID)
+	if err != nil {
+		response := map[string]interface{}{
+			"code":    http.StatusInternalServerError,
+			"status":  "failed",
+			"message": err.Error(),
+		}
+		return c.JSON(http.StatusInternalServerError, response)
+	}
+
+	log.Print("tsc: ", tsc)
+	response := map[string]interface{}{
+		"code":         http.StatusOK,
+		"status":       "success",
+		"pagination":   pagination,
+		"transactions": tsc,
 	}
 	return c.JSON(http.StatusOK, response)
 }

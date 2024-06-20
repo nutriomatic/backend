@@ -44,7 +44,7 @@ type ProductResponse struct {
 }
 
 type ProductRequest struct {
-	Id           string  `json:"id"`
+	Id           string  `json:"product_id"`
 	Energy       float64 `json:"energy"`
 	Protein      float64 `json:"protein"`
 	Fat          float64 `json:"fat"`

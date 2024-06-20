@@ -89,6 +89,7 @@ func InitRouter(e *echo.Echo) {
 	transactionGroup.PATCH("/status/:id", transactionController.UpdateStatusTransaction)
 	transactionGroup.DELETE("/:id", transactionController.DeleteTransaction)
 	transactionGroup.POST("/proof", transactionController.UploadProofPayment)
+	transactionGroup.GET("/checkout", transactionController.Checkout)
 
 	snGroup := e.Group("/api/scanned-nutrition")
 	snGroup.POST("/", snController.CreateScannedNutrition)

@@ -195,10 +195,6 @@ func (service *productService) CreateProduct(c echo.Context) error {
 		return err
 	}
 
-	err = godotenv.Load(".env")
-	if err != nil {
-		return err
-	}
 	url := os.Getenv("PYTHON_API") + "/grade"
 
 	requestData := &dto.ProductRequest{
