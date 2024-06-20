@@ -12,6 +12,7 @@ import (
 	"cloud.google.com/go/storage"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
+	"google.golang.org/api/option"
 )
 
 var bucketName = os.Getenv("BUCKET_NAME")
@@ -26,8 +27,10 @@ type ClientUploader struct {
 }
 
 func NewClientUploader() *ClientUploader {
-	os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", "c241-ps219-ab6446ebf2e7.json")
-	client, err := storage.NewClient(context.Background())
+	credentialsPath := os.Getenv("GOOGLE_APPLICATION_CREDENTIALS")
+	opt := option.WithCredentialsFile(credentialsPath)
+
+	client, err := storage.NewClient(context.Background(), opt)
 	if err != nil {
 		log.Fatalf("Failed to create client: %v", err)
 	}
